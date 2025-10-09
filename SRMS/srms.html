@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Result Management System - Public</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .custom-shadow {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .grade-badge {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .table-hover tbody tr:hover {
+            transform: scale(1.01);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .notice-card {
+            transition: all 0.3s;
+            border-left: 4px solid #667eea;
+        }
+        
+        .notice-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white custom-shadow mb-4">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <div class="bg-gradient rounded p-2 me-3">
+                    <i class="bi bi-mortarboard-fill text-white fs-4"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 gradient-text fw-bold">SRMS</h5>
+                    <small class="text-muted">Student Result Management</small>
+                </div>
+            </a>
+            <a href="admin.html" class="btn btn-outline-primary">
+                <i class="bi bi-shield-lock me-2"></i>Admin Login
+            </a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <!-- Hero Search Section -->
+        <div id="searchSection" class="card custom-shadow border-0 mb-4">
+            <div class="card-body p-5 text-center">
+                <h1 class="display-4 fw-bold mb-3">Search Your Results</h1>
+                <p class="lead text-muted mb-5">Enter your Index Number or Board Roll to view results</p>
+                
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="input-group input-group-lg mb-3">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" id="searchInput" 
+                                   placeholder="e.g., IDX2025001 or BR-45001">
+                            <button class="btn btn-gradient px-5" onclick="showResult()">
+                                <i class="bi bi-search me-2"></i>Search
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <span class="badge bg-light text-dark">Example: IDX2025001</span>
+                            <span class="badge bg-light text-dark">Example: BR-45001</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Section (Hidden Initially) -->
+        <div id="resultSection" style="display: none;">
+            <button class="btn btn-light mb-3" onclick="hideResult()">
+                <i class="bi bi-arrow-left me-2"></i>Back to Search
+            </button>
+            
+            <!-- Student Info Card -->
+            <div class="card custom-shadow border-0 mb-4">
+                <div class="card-header bg-gradient text-white py-4">
+                    <h3 class="mb-3"><i class="bi bi-person-badge me-2"></i>Student Information</h3>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <small class="d-block opacity-75">Student Name</small>
+                            <strong class="fs-6">Md. Rahim</strong>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <small class="d-block opacity-75">Index Number</small>
+                            <strong class="fs-6">IDX2025001</strong>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <small class="d-block opacity-75">Board Roll</small>
+                            <strong class="fs-6">BR-45001</strong>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <small class="d-block opacity-75">Roll</small>
+                            <strong class="fs-6">R-102</strong>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <small class="d-block opacity-75">Department</small>
+                            <strong class="fs-6">CSE</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <h5 class="mb-4"><i class="bi bi-table me-2"></i>Subject Results</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th class="text-center">Marks</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Percentage</th>
+                                    <th class="text-center">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>CSE101</strong></td>
+                                    <td>Programming I</td>
+                                    <td class="text-center">78</td>
+                                    <td class="text-center">100</td>
+                                    <td class="text-center">78%</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success grade-badge">A</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CSE102</strong></td>
+                                    <td>Data Structures</td>
+                                    <td class="text-center">85</td>
+                                    <td class="text-center">100</td>
+                                    <td class="text-center">85%</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success grade-badge">A+</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MATH101</strong></td>
+                                    <td>Discrete Mathematics</td>
+                                    <td class="text-center">72</td>
+                                    <td class="text-center">100</td>
+                                    <td class="text-center">72%</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success grade-badge">A</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ENG101</strong></td>
+                                    <td>English Composition</td>
+                                    <td class="text-center">65</td>
+                                    <td class="text-center">100</td>
+                                    <td class="text-center">65%</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info grade-badge">A-</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>PHY101</strong></td>
+                                    <td>Physics I</td>
+                                    <td class="text-center">55</td>
+                                    <td class="text-center">100</td>
+                                    <td class="text-center">55%</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning grade-badge">B</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary Cards -->
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body">
+                                    <h6 class="opacity-75 mb-2">Total Subjects</h6>
+                                    <h2 class="mb-0">5</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body">
+                                    <h6 class="opacity-75 mb-2">Total Marks</h6>
+                                    <h2 class="mb-0">355/500</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body">
+                                    <h6 class="opacity-75 mb-2">Average</h6>
+                                    <h2 class="mb-0">71%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card bg-warning text-white text-center">
+                                <div class="card-body">
+                                    <h6 class="opacity-75 mb-2">Overall Grade</h6>
+                                    <h2 class="mb-0">A</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notice Board -->
+        <div class="card custom-shadow border-0">
+            <div class="card-header bg-white py-4">
+                <h3 class="mb-0">
+                    <i class="bi bi-megaphone gradient-text me-2"></i>Recent Notices
+                </h3>
+            </div>
+            <div class="card-body p-4">
+                <div class="notice-card bg-light p-4 rounded mb-3">
+                    <h5 class="mb-2">পরীক্ষার সময়সূচী প্রকাশিত হয়েছে</h5>
+                    <div class="text-muted">
+                        <i class="bi bi-calendar-event me-2"></i>October 5, 2025
+                        <i class="bi bi-person ms-3 me-2"></i>Admin
+                    </div>
+                </div>
+                
+                <div class="notice-card bg-light p-4 rounded mb-3">
+                    <h5 class="mb-2">ফলাফল প্রকাশের তারিখ ঘোষণা</h5>
+                    <div class="text-muted">
+                        <i class="bi bi-calendar-event me-2"></i>October 3, 2025
+                        <i class="bi bi-person ms-3 me-2"></i>Admin
+                    </div>
+                </div>
+                
+                <div class="notice-card bg-light p-4 rounded">
+                    <h5 class="mb-2">নতুন একাডেমিক ক্যালেন্ডার ২০২৫</h5>
+                    <div class="text-muted">
+                        <i class="bi bi-calendar-event me-2"></i>September 28, 2025
+                        <i class="bi bi-person ms-3 me-2"></i>Admin
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-white py-4 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 Student Result Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/srms.js"></script>
+    
+    <script>
+        function showResult() {
+            const searchValue = document.getElementById('searchInput').value;
+            if (searchValue.trim()) {
+                document.getElementById('searchSection').style.display = 'none';
+                document.getElementById('resultSection').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                alert('Please enter an Index Number or Board Roll');
+            }
+        }
+        
+        function hideResult() {
+            document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('searchInput').value = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Enter key support
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') showResult();
+        });
+    </script>
+
+</body>
+</html>

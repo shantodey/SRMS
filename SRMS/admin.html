@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - SRMS</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f6f9;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 260px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            padding: 20px 0;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-brand {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-brand h4 {
+            color: white;
+            margin: 0;
+            font-weight: 700;
+        }
+        
+        .sidebar-brand small {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .nav-menu li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-menu li a:hover,
+        .nav-menu li a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .nav-menu li a i {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            width: 25px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .top-bar h2 {
+            margin: 0;
+            color: #1e293b;
+            font-weight: 700;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Stats Cards */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-card p {
+            color: #64748b;
+            margin: 0;
+        }
+        
+        /* Content Cards */
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .content-card h4 {
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+        
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+        
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #f1f5f9;
+        }
+        
+        .upload-zone i {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        /* Table Styles */
+        .data-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .data-table table {
+            margin: 0;
+        }
+        
+        .data-table thead {
+            background: #f8fafc;
+        }
+        
+        .data-table th {
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 15px;
+            border: none;
+        }
+        
+        .data-table td {
+            padding: 15px;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+        
+        /* Action Buttons */
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-edit {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .btn-delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .btn-view {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        /* Forms */
+        .form-modern label {
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .form-modern .form-control,
+        .form-modern .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 0.95rem;
+        }
+        
+        .form-modern .form-control:focus,
+        .form-modern .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* Page Sections */
+        .page-section {
+            display: none;
+        }
+        
+        .page-section.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                overflow: hidden;
+            }
+            
+            .sidebar.active {
+                width: 260px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h4><i class="bi bi-shield-check me-2"></i>SRMS Admin</h4>
+            <small>Management Panel</small>
+        </div>
+        
+        <ul class="nav-menu">
+            <li><a href="#" class="active" onclick="showSection('dashboard')">
+                <i class="bi bi-grid-fill"></i>
+                <span>Dashboard</span>
+            </a></li>
+            <li><a href="#" onclick="showSection('importStudents')">
+                <i class="bi bi-people-fill"></i>
+                <span>Import Students</span>
+            </a></li>
+            <li><a href="#" onclick="showSection('importResults')">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                <span>Import Results</span>
+            </a></li>
+            <li><a href="#" onclick="showSection('manageStudents')">
+                <i class="bi bi-person-lines-fill"></i>
+                <span>Manage Students</span>
+            </a></li>
+            <li><a href="#" onclick="showSection('manageNotices')">
+                <i class="bi bi-megaphone-fill"></i>
+                <span>Manage Notices</span>
+            </a></li>
+            <li><a href="#" onclick="showSection('settings')">
+                <i class="bi bi-gear-fill"></i>
+                <span>Settings</span>
+            </a></li>
+            <li><a href="#" onclick="showSection('batches')">
+                <i class="bi bi-collection-fill"></i>
+                <span>Batches & Departments</span>
+            </a></li>
+            <li><a href="#" onclick="showSection('reports')">
+                <i class="bi bi-file-text-fill"></i>
+                <span>Reports</span>
+            </a></li>
+            <li><a href="srms.html" style="margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div>
+                <h2 id="pageTitle">Dashboard</h2>
+                <small class="text-muted">Welcome back, Admin!</small>
+            </div>
+            <div class="user-info">
+                <div>
+                    <div class="fw-bold">Admin User</div>
+                    <small class="text-muted">admin@srms.edu</small>
+                </div>
+                <div class="user-avatar">AU</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="page-section active">
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #dbeafe; color: #1e40af;">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <p>Total Students</p>
+                        <h3>1,245</h3>
+                        <small class="text-success"><i class="bi bi-arrow-up"></i> 12% from last month</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #dcfce7; color: #166534;">
+                            <i class="bi bi-journal-check"></i>
+                        </div>
+                        <p>Published Results</p>
+                        <h3>48</h3>
+                        <small class="text-success"><i class="bi bi-arrow-up"></i> 8% from last month</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fef3c7; color: #92400e;">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <p>Departments</p>
+                        <h3>8</h3>
+                        <small class="text-muted">Across all batches</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fce7f3; color: #9f1239;">
+                            <i class="bi bi-megaphone"></i>
+                        </div>
+                        <p>Active Notices</p>
+                        <h3>12</h3>
+                        <small class="text-muted">Currently published</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="content-card">
+                        <h4><i class="bi bi-activity me-2"></i>Recent Activities</h4>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0">
+                                <div>
+                                    <i class="bi bi-upload text-primary me-2"></i>
+                                    <strong>Result Import</strong> - CSE Department, Semester 1
+                                </div>
+                                <small class="text-muted">2 hours ago</small>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0">
+                                <div>
+                                    <i class="bi bi-megaphone text-success me-2"></i>
+                                    <strong>Notice Published</strong> - Exam Schedule 2025
+                                </div>
+                                <small class="text-muted">5 hours ago</small>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0">
+                                <div>
+                                    <i class="bi bi-person-plus text-info me-2"></i>
+                                    <strong>Students Added</strong> - 45 new students imported
+                                </div>
+                                <small class="text-muted">1 day ago</small>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center border-0">
+                                <div>
+                                    <i class="bi bi-pencil text-warning me-2"></i>
+                                    <strong>Settings Updated</strong> - Grade scale modified
+                                </div>
+                                <small class="text-muted">2 days ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="content-card">
+                        <h4><i class="bi bi-calendar-event me-2"></i>Quick Actions</h4>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary" onclick="showSection('importStudents')">
+                                <i class="bi bi-upload me-2"></i>Import Students
+                            </button>
+                            <button class="btn btn-success" onclick="showSection('importResults')">
+                                <i class="bi bi-file-earmark-bar-graph me-2"></i>Import Results
+                            </button>
+                            <button class="btn btn-info" onclick="showSection('manageNotices')">
+                                <i class="bi bi-megaphone me-2"></i>Create Notice
+                            </button>
+                            <button class="btn btn-warning" onclick="showSection('reports')">
+                                <i class="bi bi-download me-2"></i>Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Students Section -->
+        <div id="importStudents" class="page-section">
+            <div class="content-card">
+                <h4><i class="bi bi-people-fill me-2"></i>Import Students from Excel</h4>
+                <p class="text-muted mb-4">Upload an Excel file with student data. Required columns: batch, semester, department, student_name, roll, index_no, board_roll</p>
+                
+                <div class="upload-zone">
+                    <i class="bi bi-cloud-upload"></i>
+                    <h5>Drag & Drop Excel File Here</h5>
+                    <p class="text-muted">or click to browse</p>
+                    <button class="btn btn-primary mt-3">
+                        <i class="bi bi-folder2-open me-2"></i>Choose File
+                    </button>
+                </div>
+                
+                <div class="mt-4">
+                    <button class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle me-2"></i>Preview & Import
+                    </button>
+                    <a href="#" class="btn btn-outline-secondary btn-lg ms-2">
+                        <i class="bi bi-download me-2"></i>Download Template
+                    </a>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h4><i class="bi bi-clock-history me-2"></i>Recent Imports</h4>
+                <div class="data-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Date</th>
+                                <th>Records</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="bi bi-file-excel text-success me-2"></i>students_batch_2025.xlsx</td>
+                                <td>Oct 8, 2025</td>
+                                <td>145 records</td>
+                                <td><span class="badge bg-success">Success</span></td>
+                                <td>
+                                    <button class="action-btn btn-view"><i class="bi bi-eye"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><i class="bi bi-file-excel text-success me-2"></i>cse_students.xlsx</td>
+                                <td>Oct 5, 2025</td>
+                                <td>67 records</td>
+                                <td><span class="badge bg-success">Success</span></td>
+                                <td>
+                                    <button class="action-btn btn-view"><i class="bi bi-eye"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Results Section -->
+        <div id="importResults" class="page-section">
+            <div class="content-card">
+                <h4><i class="bi bi-file-earmark-bar-graph-fill me-2"></i>Import Results from Excel</h4>
+                <p class="text-muted mb-4">Upload an Excel file with result data. Required columns: index_no, board_roll, subject_code, subject_name, marks_obtained, total_marks</p>
+                
+                <div class="upload-zone">
+                    <i class="bi bi-cloud-upload"></i>
+                    <h5>Drag & Drop Excel File Here</h5>
+                    <p class="text-muted">or click to browse</p>
+                    <button class="btn btn-success mt-3">
+                        <i class="bi bi-folder2-open me-2"></i>Choose File
+                    </button>
+                </div>
+                
+                <div class="mt-4">
+                    <button class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle me-2"></i>Preview & Import
+                    </button>
+                    <a href="#" class="btn btn-outline-secondary btn-lg ms-2">
+                        <i class="bi bi-download me-2"></i>Download Template
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Students Section -->
+        <div id="manageStudents" class="page-section">
+            <div class="content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-person-lines-fill me-2"></i>All Students</h4>
+                    <div>
+                        <input type="text" class="form-control d-inline-block w-auto me-2" placeholder="Search students...">
+                        <button class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Add Student
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="data-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Index No</th>
+                                <th>Name</th>
+                                <th>Roll</th>
+                                <th>Department</th>
+                                <th>Batch</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>IDX2025001</strong></td>
+                                <td>Md. Rahim</td>
+                                <td>R-102</td>
+                                <td><span class="badge bg-primary">CSE</span></td>
+                                <td>2025</td>
+                                <td>
+                                    <button class="action-btn btn-view"><i class="bi bi-eye"></i></button>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>IDX2025002</strong></td>
+                                <td>Fatima Ahmed</td>
+                                <td>R-103</td>
+                                <td><span class="badge bg-primary">CSE</span></td>
+                                <td>2025</td>
+                                <td>
+                                    <button class="action-btn btn-view"><i class="bi bi-eye"></i></button>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>IDX2025003</strong></td>
+                                <td>Karim Hassan</td>
+                                <td>R-104</td>
+                                <td><span class="badge bg-success">EEE</span></td>
+                                <td>2025</td>
+                                <td>
+                                    <button class="action-btn btn-view"><i class="bi bi-eye"></i></button>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted">Showing 1 to 3 of 1,245 entries</div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Notices Section -->
+        <div id="manageNotices" class="page-section">
+            <div class="content-card">
+                <h4><i class="bi bi-megaphone-fill me-2"></i>Create New Notice</h4>
+                <form class="form-modern">
+                    <div class="mb-3">
+                        <label class="form-label">Notice Title</label>
+                        <input type="text" class="form-control" placeholder="Enter notice title">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notice Body (Bengali Supported)</label>
+                        <textarea class="form-control" rows="6" placeholder="পরীক্ষার সময়সূচী সম্পর্কিত বিজ্ঞপ্তি..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Publish Date</label>
+                            <input type="date" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select">
+                                <option>Published</option>
+                                <option>Draft</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-circle me-2"></i>Publish Notice
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg ms-2">
+                        <i class="bi bi-save me-2"></i>Save as Draft
+                    </button>
+                </form>
+            </div>
+            
+            <div class="content-card">
+                <h4><i class="bi bi-list-ul me-2"></i>All Notices</h4>
+                <div class="data-table">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>পরীক্ষার সময়সূচী প্রকাশিত হয়েছে</td>
+                                <td>Oct 5, 2025</td>
+                                <td><span class="badge bg-success">Published</span></td>
+                                <td>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ফলাফল প্রকাশের তারিখ ঘোষণা</td>
+                                <td>Oct 3, 2025</td>
+                                <td><span class="badge bg-success">Published</span></td>
+                                <td>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>নতুন একাডেমিক ক্যালেন্ডার ২০২৫</td>
+                                <td>Sep 28, 2025</td>
+                                <td><span class="badge bg-warning">Draft</span></td>
+                                <td>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="page-section">
+            <div class="content-card">
+                <h4><i class="bi bi-sliders me-2"></i>Grade Scale Configuration</h4>
+                <p class="text-muted mb-4">Configure the percentage thresholds for each grade</p>
+                
+                <form class="form-modern">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">A+ Grade (Minimum %)</label>
+                            <input type="number" class="form-control" value="80" min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">A Grade (Minimum %)</label>
+                            <input type="number" class="form-control" value="70" min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">A- Grade (Minimum %)</label>
+                            <input type="number" class="form-control" value="60" min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">B Grade (Minimum %)</label>
+                            <input type="number" class="form-control" value="50" min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">C Grade (Minimum %)</label>
+                            <input type="number" class="form-control" value="40" min="0" max="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">D Grade (Minimum %)</label>
+                            <input type="number" class="form-control" value="33" min="0" max="100">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg mt-4">
+                        <i class="bi bi-check-circle me-2"></i>Save Settings
+                    </button>
+                </form>
+            </div>
+            
+            <div class="content-card">
+                <h4><i class="bi bi-shield-lock me-2"></i>Account Settings</h4>
+                <form class="form-modern">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="admin@srms.edu">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-key me-2"></i>Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Batches & Departments Section -->
+        <div id="batches" class="page-section">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h4><i class="bi bi-calendar3 me-2"></i>Manage Batches</h4>
+                        <form class="form-modern mb-4">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Enter batch name">
+                                <button class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Batch
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="list-group">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-calendar-check me-2 text-primary"></i>Batch 2025</span>
+                                <div>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-calendar-check me-2 text-primary"></i>Batch 2024</span>
+                                <div>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-calendar-check me-2 text-primary"></i>Batch 2023</span>
+                                <div>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="content-card">
+                        <h4><i class="bi bi-building me-2"></i>Manage Departments</h4>
+                        <form class="form-modern mb-4">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Enter department name">
+                                <button class="btn btn-success">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Department
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="list-group">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-laptop me-2 text-success"></i>Computer Science (CSE)</span>
+                                <div>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-lightning me-2 text-warning"></i>Electrical Engineering (EEE)</span>
+                                <div>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-gear me-2 text-info"></i>Mechanical Engineering (ME)</span>
+                                <div>
+                                    <button class="action-btn btn-edit"><i class="bi bi-pencil"></i></button>
+                                    <button class="action-btn btn-delete"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Section -->
+        <div id="reports" class="page-section">
+            <div class="content-card">
+                <h4><i class="bi bi-file-earmark-text me-2"></i>Generate Reports</h4>
+                <p class="text-muted mb-4">Export student and result data in various formats</p>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-body">
+                                <h5><i class="bi bi-people me-2 text-primary"></i>Student Reports</h5>
+                                <p class="text-muted">Export complete student data</p>
+                                <select class="form-select mb-3">
+                                    <option>All Departments</option>
+                                    <option>CSE</option>
+                                    <option>EEE</option>
+                                    <option>ME</option>
+                                </select>
+                                <button class="btn btn-primary w-100">
+                                    <i class="bi bi-download me-2"></i>Export to Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border">
+                            <div class="card-body">
+                                <h5><i class="bi bi-bar-chart me-2 text-success"></i>Result Reports</h5>
+                                <p class="text-muted">Export result data and statistics</p>
+                                <select class="form-select mb-3">
+                                    <option>All Batches</option>
+                                    <option>Batch 2025</option>
+                                    <option>Batch 2024</option>
+                                    <option>Batch 2023</option>
+                                </select>
+                                <button class="btn btn-success w-100">
+                                    <i class="bi bi-download me-2"></i>Export to PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update active menu item
+            document.querySelectorAll('.nav-menu a').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update page title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'importStudents': 'Import Students',
+                'importResults': 'Import Results',
+                'manageStudents': 'Manage Students',
+                'manageNotices': 'Manage Notices',
+                'settings': 'Settings',
+                'batches': 'Batches & Departments',
+                'reports': 'Reports'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionId] || 'Dashboard';
+        }
+    </script>
+</body>
+</html>
