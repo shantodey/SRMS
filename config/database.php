@@ -15,4 +15,3 @@ if ($conn->connect_error) {
 
 // Set charset to handle Bengali text properly
 $conn->set_charset("utf8mb4");
-?>

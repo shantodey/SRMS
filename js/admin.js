@@ -116,10 +116,26 @@ function handleFileUpload(fileType) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.xlsx, .xls';
-    
+
     fileInput.onchange = function(e) {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Validate file type
+        const allowedExtensions = ['xlsx', 'xls'];
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+
+        if (!allowedExtensions.includes(fileExtension)) {
+            alert('Invalid file type. Please upload only .xlsx or .xls files.');
+            return;
+        }
+
+        // Validate file size (5MB max)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            alert('File size exceeds 5MB. Please upload a smaller file.');
+            return;
+        }
 
         const formData = new FormData();
         formData.append('file', file);
@@ -138,8 +154,27 @@ function handleFileUpload(fileType) {
         .then(data => {
             if (data.success) {
                 // Show success message and preview
-                showUploadPreview(fileType, data.data);
-                alert('Upload successful!');
+                showUploadPreview(fileType, data);
+
+                // Show detailed results
+                let message = `Upload completed!\n\n`;
+                message += `✓ Success: ${data.stats.success} records\n`;
+                if (data.stats.failed > 0) {
+                    message += `✗ Failed: ${data.stats.failed} records\n\n`;
+                    message += `Errors:\n`;
+                    data.stats.errors.slice(0, 5).forEach(err => {
+                        message += `- ${err}\n`;
+                    });
+                    if (data.stats.errors.length > 5) {
+                        message += `... and ${data.stats.errors.length - 5} more errors`;
+                    }
+                }
+                alert(message);
+
+                // Reset upload zone after showing preview
+                setTimeout(() => {
+                    uploadZone.innerHTML = originalContent;
+                }, 2000);
             } else {
                 alert(data.message || 'Upload failed');
                 uploadZone.innerHTML = originalContent;
@@ -147,7 +182,7 @@ function handleFileUpload(fileType) {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred during upload');
+            alert('An error occurred during upload: ' + error.message);
             uploadZone.innerHTML = originalContent;
         });
     };
@@ -156,27 +191,47 @@ function handleFileUpload(fileType) {
 }
 
 // Function to show preview of uploaded data
-function showUploadPreview(type, data) {
+function showUploadPreview(type, responseData) {
     const previewDiv = document.querySelector(`#${type}Preview`);
-    if (!previewDiv || !data || data.length === 0) return;
+    if (!previewDiv || !responseData.data || responseData.data.length === 0) return;
 
-    let tableHTML = '<h5 class="mt-4">Preview of Uploaded Data</h5><div class="table-responsive"><table class="table table-sm table-bordered>';
-    
+    let tableHTML = '<div class="alert alert-success mt-4">';
+    tableHTML += `<strong>Import Summary:</strong> ${responseData.stats.success} records imported successfully`;
+    if (responseData.stats.failed > 0) {
+        tableHTML += `, ${responseData.stats.failed} failed`;
+    }
+    tableHTML += '</div>';
+
+    tableHTML += '<h5 class="mt-3">Preview of Uploaded Data (First 5 rows)</h5>';
+    tableHTML += '<div class="table-responsive"><table class="table table-sm table-bordered">';
+
     // Generate headers based on type
-    const headers = type === 'students' 
+    const headers = type === 'students'
         ? ['Batch', 'Semester', 'Department', 'Name', 'Roll No', 'Index No', 'Board Roll']
         : ['Index No', 'Board Roll', 'Subject Code', 'Subject Name', 'Marks', 'Total Marks'];
-    
+
     // Add header row
-    tableHTML += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
-    
+    tableHTML += '<thead class="table-light"><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+
     // Add data rows
     tableHTML += '<tbody>';
-    data.forEach(row => {
-        tableHTML += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+    responseData.data.forEach(row => {
+        tableHTML += '<tr>' + row.map(cell => `<td>${cell || ''}</td>`).join('') + '</tr>';
     });
     tableHTML += '</tbody></table></div>';
-    
+
+    // Show errors if any
+    if (responseData.stats.errors && responseData.stats.errors.length > 0) {
+        tableHTML += '<div class="alert alert-warning mt-3"><strong>Errors:</strong><ul class="mb-0 mt-2">';
+        responseData.stats.errors.slice(0, 10).forEach(err => {
+            tableHTML += `<li>${err}</li>`;
+        });
+        if (responseData.stats.errors.length > 10) {
+            tableHTML += `<li><em>... and ${responseData.stats.errors.length - 10} more errors</em></li>`;
+        }
+        tableHTML += '</ul></div>';
+    }
+
     previewDiv.innerHTML = tableHTML;
 }
 

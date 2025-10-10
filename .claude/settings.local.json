@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:/xampp/php/php.exe\":*)",
+      "Bash(curl -s \"http://localhost/SRMS/phpinfo_test.php\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
