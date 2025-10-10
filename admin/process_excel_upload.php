@@ -193,7 +193,7 @@ function processResults($conn, $rows, &$response) {
             // Get or create subject
             $subjectId = getOrCreateSubject($conn, $subjectCode, $subjectName, $studentInfo['department_id'], $studentInfo['semester'], $totalMarks);
 
-            // Calculate grade
+            // Calculate percentage and grade
             $percentage = ($marksObtained / $totalMarks) * 100;
             $grade = calculateGrade($conn, $percentage);
 
@@ -208,18 +208,18 @@ function processResults($conn, $rows, &$response) {
             $checkResult = $checkStmt->get_result();
 
             if ($checkResult->num_rows > 0) {
-                // Update existing result
+                // Update existing result with percentage and total_marks
                 $existingResult = $checkResult->fetch_assoc();
-                $updateSql = "UPDATE results SET marks_obtained = ?, grade = ?, exam_date = ? WHERE id = ?";
+                $updateSql = "UPDATE results SET marks_obtained = ?, percentage = ?, total_marks = ?, grade = ?, exam_date = ? WHERE id = ?";
                 $updateStmt = $conn->prepare($updateSql);
-                $updateStmt->bind_param("dssi", $marksObtained, $grade, $examDate, $existingResult['id']);
+                $updateStmt->bind_param("ddissi", $marksObtained, $percentage, $totalMarks, $grade, $examDate, $existingResult['id']);
                 $updateStmt->execute();
             } else {
-                // Insert new result
-                $insertSql = "INSERT INTO results (student_id, subject_id, marks_obtained, grade, semester, exam_date)
-                             VALUES (?, ?, ?, ?, ?, ?)";
+                // Insert new result with percentage and total_marks
+                $insertSql = "INSERT INTO results (student_id, subject_id, marks_obtained, percentage, total_marks, grade, semester, exam_date)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $insertStmt = $conn->prepare($insertSql);
-                $insertStmt->bind_param("iidsis", $studentId, $subjectId, $marksObtained, $grade,
+                $insertStmt->bind_param("iiddisis", $studentId, $subjectId, $marksObtained, $percentage, $totalMarks, $grade,
                                        $studentInfo['semester'], $examDate);
                 $insertStmt->execute();
             }

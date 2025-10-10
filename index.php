@@ -204,10 +204,6 @@ try {
                 return;
             }
 
-            // Show loading
-            loadingModal.show();
-            clearMessage();
-
             // Fetch result from backend
             fetch('get_result.php', {
                 method: 'POST',

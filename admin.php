@@ -100,46 +100,63 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
             <small>Management Panel</small>
         </div>
 
-        <ul class="nav-menu">
-            <li><a href="#" class="active" onclick="showSection('dashboard', event)">
-                <i class="bi bi-grid-fill"></i>
-                <span>Dashboard</span>
-            </a></li>
-            <li><a href="#" onclick="showSection('importStudents', event)">
-                <i class="bi bi-people-fill"></i>
-                <span>Import Students</span>
-            </a></li>
-            <li><a href="#" onclick="showSection('importResults', event)">
-                <i class="bi bi-file-earmark-bar-graph-fill"></i>
-                <span>Import Results</span>
-            </a></li>
-            <li><a href="#" onclick="showSection('manageStudents', event)">
-                <i class="bi bi-person-lines-fill"></i>
-                <span>Manage Students</span>
-            </a></li>
-            <li><a href="#" onclick="showSection('manageNotices', event)">
-                <i class="bi bi-megaphone-fill"></i>
-                <span>Manage Notices</span>
-            </a></li>
-            <li><a href="#" onclick="showSection('settings', event)">
-                <i class="bi bi-gear-fill"></i>
-                <span>Settings</span>
-            </a></li>
-            <li><a href="#" onclick="showSection('batches', event)">
-                <i class="bi bi-collection-fill"></i>
-                <span>Batches & Departments</span>
-            </a></li>
-            <li><a href="#" onclick="showSection('reports', event)">
-                <i class="bi bi-file-text-fill"></i>
-                <span>Reports</span>
-            </a></li>
-            <li>
-                <a href="index.php" style="margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-                <i class="bi bi-box-arrow-left"></i>
-                <span>Logout</span>
-                </a>
-            </li>
-        </ul>
+       <ul class="nav-menu">
+    <li>
+        <a href="javascript:void(0)" class="active" onclick="showSection('dashboard', event)">
+            <i class="bi bi-grid-fill"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('importStudents', event)">
+            <i class="bi bi-people-fill"></i>
+            <span>Import Students</span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('importResults', event)">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            <span>Import Results</span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('manageStudents', event)">
+            <i class="bi bi-person-lines-fill"></i>
+            <span>Manage Students</span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('manageNotices', event)">
+            <i class="bi bi-megaphone-fill"></i>
+            <span>Manage Notices</span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('settings', event)">
+            <i class="bi bi-gear-fill"></i>
+            <span>Settings</span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('batches', event)">
+            <i class="bi bi-collection-fill"></i>
+            <span>Batches & Departments</span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('reports', event)">
+            <i class="bi bi-file-text-fill"></i>
+            <span>Reports</span>
+        </a>
+    </li>
+    <li>
+        <a href="index.php" style="margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+            <i class="bi bi-box-arrow-left"></i>
+            <span>Logout</span>
+        </a>
+    </li>
+</ul>
+
     </div>
 
     <!-- Main Content -->
@@ -329,13 +346,13 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
                         </thead>
                         <tbody>
                             <!-- Data will be loaded dynamically via JavaScript -->
-                            <tr>
+                            <!-- <tr>
                                 <td colspan="6" class="text-center">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
                                 </td>
-                            </tr>
+                            </tr> -->
                         </tbody>
                     </table>
                 </div>
