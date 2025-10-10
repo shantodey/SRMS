@@ -1,3 +1,5 @@
+
+
 // Function to add new student
 function addStudent(formData) {
     fetch('admin/process_student.php', {
@@ -8,8 +10,12 @@ function addStudent(formData) {
     .then(data => {
         if (data.success) {
             alert(data.message);
-            // Refresh the student list or clear the form
             document.getElementById('addStudentForm').reset();
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+            if (modal) modal.hide();
+            // Refresh the student list
+            loadStudentList();
         } else {
             alert(data.message);
         }
@@ -273,6 +279,320 @@ function initializeDropZones() {
     });
 }
 
+// Function to load notices
+function loadNotices() {
+    fetch('admin/get_notices.php')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const tbody = document.querySelector('#noticesTable tbody');
+            tbody.innerHTML = '';
+
+            if (data.notices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No notices found</td></tr>';
+                return;
+            }
+
+            data.notices.forEach(notice => {
+                const tr = document.createElement('tr');
+                const statusBadge = notice.status === 'published'
+                    ? '<span class="badge bg-success">Published</span>'
+                    : '<span class="badge bg-warning">Draft</span>';
+
+                tr.innerHTML = `
+                    <td>${notice.title}</td>
+                    <td>${new Date(notice.publish_date).toLocaleDateString()}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="action-btn btn-edit" onclick="editNotice(${notice.id})"><i class="bi bi-pencil"></i></button>
+                        <button class="action-btn btn-delete" onclick="deleteNotice(${notice.id})"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// View student details in modal
+function viewStudent(id) {
+    fetch('admin/get_student.php?id=' + id)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const student = data.student;
+            const modal = new bootstrap.Modal(document.getElementById('viewStudentModal'));
+
+            document.getElementById('viewStudentDetails').innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>Name:</strong><br>${student.student_name}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Index No:</strong><br>${student.index_no}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Roll No:</strong><br>${student.roll_no || 'N/A'}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Board Roll:</strong><br>${student.board_roll || 'N/A'}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Department:</strong><br>${student.department_name} (${student.department_code})
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Batch:</strong><br>${student.batch_name}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Semester:</strong><br>${student.semester}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Results Uploaded:</strong><br><span class="badge bg-info">${student.result_count} subjects</span>
+                    </div>
+                </div>
+            `;
+            modal.show();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while loading student details');
+    });
+}
+
+function editStudent(id) {
+    fetch('admin/get_student.php?id=' + id)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const student = data.student;
+            const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+
+            document.getElementById('editStudentId').value = student.id;
+            document.getElementById('editStudentName').value = student.student_name;
+            document.getElementById('editStudentIndex').value = student.index_no;
+            document.getElementById('editStudentRoll').value = student.roll_no || '';
+            document.getElementById('editStudentBoardRoll').value = student.board_roll || '';
+            document.getElementById('editStudentBatch').value = student.batch_id;
+            document.getElementById('editStudentDepartment').value = student.department_id;
+            document.getElementById('editStudentSemester').value = student.semester;
+
+            modal.show();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while loading student details');
+    });
+}
+
+function deleteStudent(id) {
+    if (confirm('Are you sure you want to delete this student? This will also delete all their results and cannot be undone.')) {
+        const formData = new FormData();
+        formData.append('student_id', id);
+
+        fetch('admin/delete_student.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Student deleted successfully!');
+                loadStudentList(); // Reload the student list
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the student');
+        });
+    }
+}
+
+function editNotice(id) {
+    fetch('admin/get_notice.php?id=' + id)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const notice = data.notice;
+            const modal = new bootstrap.Modal(document.getElementById('editNoticeModal'));
+
+            document.getElementById('editNoticeId').value = notice.id;
+            document.getElementById('editNoticeTitle').value = notice.title;
+            document.getElementById('editNoticeContent').value = notice.content;
+            document.getElementById('editNoticeDate').value = notice.publish_date;
+            document.getElementById('editNoticeStatus').value = notice.status;
+
+            modal.show();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while loading notice details');
+    });
+}
+
+function deleteNotice(id) {
+    if (confirm('Are you sure you want to delete this notice? This action cannot be undone.')) {
+        const formData = new FormData();
+        formData.append('notice_id', id);
+
+        fetch('admin/delete_notice.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Notice deleted successfully!');
+                loadNotices(); // Reload the notices list
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the notice');
+        });
+    }
+}
+
+function editBatch(id, name, year) {
+    const newName = prompt('Edit batch name:', name);
+    const newYear = prompt('Edit batch year:', year);
+
+    if (newName && newYear) {
+        const formData = new FormData();
+        formData.append('batch_id', id);
+        formData.append('batch_name', newName);
+        formData.append('batch_year', newYear);
+
+        fetch('admin/update_batch.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Batch updated successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the batch');
+        });
+    }
+}
+
+function deleteBatch(id) {
+    if (confirm('Are you sure you want to delete this batch? Students enrolled in this batch will prevent deletion.')) {
+        const formData = new FormData();
+        formData.append('batch_id', id);
+
+        fetch('admin/delete_batch.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Batch deleted successfully!');
+                location.reload(); // Reload to show updated list
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the batch');
+        });
+    }
+}
+
+function editDepartment(id, name, code) {
+    const newName = prompt('Edit department name:', name);
+    const newCode = prompt('Edit department code:', code);
+
+    if (newName && newCode) {
+        const formData = new FormData();
+        formData.append('dept_id', id);
+        formData.append('dept_name', newName);
+        formData.append('dept_code', newCode);
+
+        fetch('admin/update_department.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Department updated successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the department');
+        });
+    }
+}
+
+function deleteDepartment(id) {
+    if (confirm('Are you sure you want to delete this department? Students enrolled in this department will prevent deletion.')) {
+        const formData = new FormData();
+        formData.append('department_id', id);
+
+        fetch('admin/delete_department.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Department deleted successfully!');
+                location.reload(); // Reload to show updated list
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the department');
+        });
+    }
+}
+
+function exportStudents() {
+    const deptId = document.getElementById('studentReportDept').value;
+    const url = 'admin/export_students.php' + (deptId ? '?department_id=' + deptId : '');
+    window.location.href = url;
+}
+
+function exportResults() {
+    const batchId = document.getElementById('resultReportBatch').value;
+    const url = 'admin/export_results.php' + (batchId ? '?batch_id=' + batchId : '');
+    window.location.href = url;
+}
+
+function showAddStudentModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addStudentModal'));
+    modal.show();
+}
+
 // Add event listeners to forms
 document.addEventListener('DOMContentLoaded', function() {
     // Add Student Form Submit
@@ -285,6 +605,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Edit Student Form Submit
+    const editStudentForm = document.getElementById('editStudentForm');
+    if (editStudentForm) {
+        editStudentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('admin/update_student.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Student updated successfully!');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
+                    if (modal) modal.hide();
+                    loadStudentList();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the student');
+            });
+        });
+    }
+
     // Add Result Form Submit
     const addResultForm = document.getElementById('addResultForm');
     if (addResultForm) {
@@ -292,6 +641,143 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const formData = new FormData(this);
             addResult(formData);
+        });
+    }
+
+    // Edit Notice Form Submit
+    const editNoticeForm = document.getElementById('editNoticeForm');
+    if (editNoticeForm) {
+        editNoticeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('admin/update_notice.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Notice updated successfully!');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editNoticeModal'));
+                    if (modal) modal.hide();
+                    loadNotices();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the notice');
+            });
+        });
+    }
+
+    // Notice Form Submit
+    const noticeForm = document.getElementById('noticeForm');
+    if (noticeForm) {
+        noticeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('admin/process_notice.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Notice saved successfully!');
+                    noticeForm.reset();
+                    loadNotices();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the notice');
+            });
+        });
+    }
+
+    // Grade Scale Form Submit
+    const gradeScaleForm = document.getElementById('gradeScaleForm');
+    if (gradeScaleForm) {
+        gradeScaleForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('admin/update_grade_scale.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Grade scale updated successfully!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating grade scale');
+            });
+        });
+    }
+
+    // Batch Form Submit
+    const addBatchForm = document.getElementById('addBatchForm');
+    if (addBatchForm) {
+        addBatchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('admin/process_batch.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Batch added successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding batch');
+            });
+        });
+    }
+
+    // Department Form Submit
+    const addDepartmentForm = document.getElementById('addDepartmentForm');
+    if (addDepartmentForm) {
+        addDepartmentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('admin/process_department.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Department added successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding department');
+            });
         });
     }
 
