@@ -162,7 +162,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
         </a>
     </li>
     <li>
-        <a href="index.php" style="margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+        <a href="admin/logout.php" style="margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
             <i class="bi bi-box-arrow-left"></i>
             <span>Logout</span>
         </a>

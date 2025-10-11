@@ -218,5 +218,36 @@ try {
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/custom.js"></script>
+
+    <?php if (isset($_GET['logout']) && $_GET['logout'] == '1'): ?>
+    <script>
+        // Show logout success notification
+        document.addEventListener('DOMContentLoaded', function() {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification toast-success show';
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>You have been logged out successfully!</span>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+
+            // Clean URL (remove logout parameter)
+            if (window.history.replaceState) {
+                const url = new URL(window.location);
+                url.searchParams.delete('logout');
+                url.searchParams.delete('t');
+                window.history.replaceState({}, document.title, url.pathname);
+            }
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html>

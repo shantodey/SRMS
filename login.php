@@ -14,10 +14,17 @@ if(isLoggedIn()) {
 }
 
 $error = '';
+$success = '';
+
+// Check if user just logged out
+if (isset($_GET['logout']) && $_GET['logout'] == '1') {
+    $success = 'You have been logged out successfully!';
+}
+
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
-    
+
     if(login($email, $password)) {
         header('Location: admin.php');
         exit();
@@ -217,6 +224,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h4>Admin Login</h4>
                 <p>Student Result Management System</p>
             </div>
+
+            <?php if($success): ?>
+            <div class="alert" role="alert" style="background: linear-gradient(145deg, rgba(40, 167, 69, 0.15), rgba(40, 167, 69, 0.1)); border-color: rgba(40, 167, 69, 0.3); color: #4ade80;">
+                <i class="bi bi-check-circle-fill me-2"></i><?php echo htmlspecialchars($success); ?>
+            </div>
+            <?php endif; ?>
 
             <?php if($error): ?>
             <div class="alert" role="alert">
