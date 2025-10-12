@@ -58,7 +58,7 @@ try {
                         <div class="input-group input-group-lg mb-3">
                             <input type="text" class="form-control border-start-0" id="searchInput"
                                    placeholder=" You name our Board Roll">
-                            <button class="btn btn-gradient px-5" onclick="searchResult()">
+                            <button class="btn bb btn-gradient px-5" onclick="searchResult()">
                                 <i class="bi bi-search me-2"></i>Search
                             </button>
                         </div>

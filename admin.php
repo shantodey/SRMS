@@ -480,7 +480,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
 
             <div class="content-card">
                 <h4><i class="bi bi-shield-lock me-2"></i>Account Settings</h4>
-                <form class="form-modern" id="accountSettingsForm">
+                <form class="form-modern" id="accountSettingsForm" method="POST" onsubmit="return false;">
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($admin_email); ?>">

@@ -727,4 +727,7 @@ img {
     .form-select {
         font-size: 0.9rem;
     }
+    .bb{
+        display: none;
+    }
 }

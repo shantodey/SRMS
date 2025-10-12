@@ -812,6 +812,70 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Account Settings Form Submit (Password Change)
+    const accountSettingsForm = document.getElementById('accountSettingsForm');
+    if (accountSettingsForm) {
+        accountSettingsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const currentPassword = this.elements['current_password'].value;
+            const newPassword = this.elements['new_password'].value;
+            const confirmPassword = this.elements['confirm_password'].value;
+
+            // Client-side validation
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Please fill in all password fields');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match!');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('New password must be at least 6 characters long');
+                return;
+            }
+
+            const formData = new FormData(this);
+
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+            fetch('admin/update_password.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+
+                if (data.success) {
+                    alert(data.message);
+                    this.reset();
+
+                    // Optional: Redirect to login after password change
+                    if (confirm('Your password has been changed. Do you want to logout and login again with the new password?')) {
+                        window.location.href = 'admin/logout.php';
+                    }
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                console.error('Error:', error);
+                alert('An error occurred while updating password');
+            });
+        });
+    }
+
     // Initialize drop zones
     initializeDropZones();
 });
