@@ -49,7 +49,7 @@ function searchResult() {
     console.log('Search value:', searchValue);
 
     if (!searchValue) {
-        showMessage('Please enter an Index Number or Board Roll', 'warning');
+        showMessage('Please enter a Name or Board Roll', 'warning');
         return;
     }
 
@@ -93,7 +93,7 @@ function searchResult() {
                 displayResult(data);
             }
         } else {
-            showMessage(data.message || 'No results found for this Index/Board Roll', 'danger');
+            showMessage(data.message || 'Didn\'t find any information. Please check your Name or Board Roll and try again.', 'danger');
         }
     })
     .catch(error => {
@@ -151,15 +151,11 @@ function displayResult(data) {
             <small class="d-block opacity-75">Board Roll</small>
             <strong class="fs-6">${data.student.board_roll}</strong>
         </div>
-        <div class="col-md-2 col-6">
-            <small class="d-block opacity-75">Roll</small>
-            <strong class="fs-6">${data.student.roll_no}</strong>
-        </div>
-        <div class="col-md-2 col-6">
+        <div class="col-md-3 col-6">
             <small class="d-block opacity-75">Department</small>
             <strong class="fs-6">${data.student.department_name} (${data.student.department_code})</strong>
         </div>
-        <div class="col-md-1 col-6">
+        <div class="col-md-2 col-6">
             <small class="d-block opacity-75">Batch</small>
             <strong class="fs-6">${data.student.batch_name}</strong>
         </div>

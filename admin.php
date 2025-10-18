@@ -75,9 +75,11 @@ try {
     // Handle error
 }
 
-// Get admin email from session (default for now)
-$admin_email = isset($_SESSION['admin_email']) ? $_SESSION['admin_email'] : 'admin@srms.edu';
-$admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin User';
+// Get user info from session
+$user_email = isset($_SESSION['user_email']) ? $_SESSION['user_email'] : (isset($_SESSION['admin_email']) ? $_SESSION['admin_email'] : 'admin@srms.edu');
+$user_name = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : (isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin User');
+$user_type = isset($_SESSION['user_type']) ? $_SESSION['user_type'] : 'admin';
+$profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] : null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -97,6 +99,11 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
 
 </head>
 <body>
+    <!-- Desktop Sidebar Toggle Button -->
+    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+
     <!-- Mobile Menu Toggle Button -->
     <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle Menu">
         <i class="bi bi-list"></i>
@@ -108,8 +115,16 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-brand">
-            <h4><i class="bi bi-shield-check me-2"></i>Admin</h4>
-            <small>Management Panel</small>
+            <i class="bi bi-box"></i>
+            <h4>Promage</h4>
+        </div>
+
+        <div style="padding: 0 15px 30px;">
+            <?php if (isAdmin()): ?>
+            <button class="btn btn-primary w-100" style="border-radius: 50px; padding: 12px; font-weight: 600;" onclick="showAddTeacherModal()">
+                <i class="bi bi-person-plus-fill me-2"></i><span>Create New Teacher</span>
+            </button>
+            <?php endif; ?>
         </div>
 
        <ul class="nav-menu">
@@ -119,22 +134,24 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
             <span>Dashboard</span>
         </a>
     </li>
+    <?php if (isAdmin()): ?>
     <li>
         <a href="javascript:void(0)" onclick="showSection('importStudents', event)">
             <i class="bi bi-people-fill"></i>
             <span>Import Students</span>
         </a>
     </li>
+    <?php endif; ?>
     <li>
         <a href="javascript:void(0)" onclick="showSection('importResults', event)">
             <i class="bi bi-file-earmark-bar-graph-fill"></i>
-            <span>Import Results</span>
+            <span><?php echo isAdmin() ? 'Import Results' : 'Add Results'; ?></span>
         </a>
     </li>
     <li>
         <a href="javascript:void(0)" onclick="showSection('manageStudents', event)">
             <i class="bi bi-person-lines-fill"></i>
-            <span>Manage Students</span>
+            <span><?php echo isAdmin() ? 'Manage Students' : 'View Students'; ?></span>
         </a>
     </li>
     <li>
@@ -149,6 +166,13 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
             <span>Settings</span>
         </a>
     </li>
+    <?php if (isAdmin()): ?>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('manageTeachers', event)">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Manage Teachers</span>
+        </a>
+    </li>
     <li>
         <a href="javascript:void(0)" onclick="showSection('batches', event)">
             <i class="bi bi-collection-fill"></i>
@@ -161,6 +185,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
             <span>Reports</span>
         </a>
     </li>
+    <?php endif; ?>
     <li>
         <a href="admin/logout.php" style="margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
             <i class="bi bi-box-arrow-left"></i>
@@ -177,67 +202,73 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
         <div class="top-bar">
             <div>
                 <h2 id="pageTitle">Dashboard</h2>
-                <small class="text-muted">Welcome back, Admin!</small>
+                <small class="text-muted">Welcome back, <?php echo ucfirst($user_type); ?>!</small>
             </div>
             <div class="user-info">
                 <div>
-                    <div class="fw-bold"><?php echo htmlspecialchars($admin_name); ?></div>
-                    <small class="text-muted"><?php echo htmlspecialchars($admin_email); ?></small>
+                    <div class="fw-bold"><?php echo htmlspecialchars($user_name); ?></div>
+                    <small class="text-muted"><?php echo htmlspecialchars($user_email); ?></small>
                 </div>
-                <div class="user-avatar"><?php echo strtoupper(substr($admin_name, 0, 2)); ?></div>
+                <div class="user-avatar">
+                    <?php if ($profile_picture && file_exists("uploads/teacher_profiles/" . $profile_picture)): ?>
+                        <img src="uploads/teacher_profiles/<?php echo htmlspecialchars($profile_picture); ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    <?php else: ?>
+                        <?php echo strtoupper(substr($user_name, 0, 2)); ?>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
         <!-- Dashboard Section -->
         <div id="dashboard" class="page-section active">
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 style="font-weight: 700; color: #0A0A0A; margin: 0;">Overview</h3>
+                <select class="form-select" style="width: auto; border-radius: 8px; border: 1px solid #d1d5db; padding: 8px 40px 8px 12px; font-size: 0.9rem;">
+                    <option>Last 30 days</option>
+                    <option>Last 7 days</option>
+                    <option>Last 90 days</option>
+                    <option>This year</option>
+                </select>
+            </div>
+            <div class="row g-3 mb-5">
+                <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
-                        <div class="aa">
-                            <div class="stat-icon" style="background: #dbeafe; color: #1e40af;">
-                                <i class="bi bi-people-fill"></i>
-                            </div>
+                        <div class="stat-icon" style="background: #E8D5F2; color: #8B5CF6;">
+                            <i class="bi bi-graph-up"></i>
                         </div>
-                        
-                        <p>Total Students</p>
-                        <h3 id="totalStudents"><?php echo $stats['total_students']; ?></h3>
-                        <small class="text-muted">Currently enrolled</small>
+                        <p>Total revenue</p>
+                        <h3 id="totalStudents">$<?php echo number_format($stats['total_students'] * 1000, 0); ?></h3>
+                        <small class="text-muted">12% increase from last month</small>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
-                        <div class="aa">
-                            <div class="stat-icon" style="background: #dcfce7; color: #166534;">
-                                <i class="bi bi-journal-check"></i>
-                            </div>
+                        <div class="stat-icon" style="background: #FFE0D5; color: #FF6B35;">
+                            <i class="bi bi-briefcase"></i>
                         </div>
-                        <p>Published Results</p>
-                        <h3 id="publishedResults"><?php echo $stats['published_results']; ?></h3>
-                        <small class="text-muted">Total published results</small>
+                        <p>Projects</p>
+                        <h3><?php echo $stats['published_results']; ?> <small>/100</small></h3>
+                        <small class="text-muted">10% decrease from last month</small>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
-                        <div class="aa">
-                            <div class="stat-icon" style="background: #fef3c7; color: #92400e;">
-                                <i class="bi bi-building"></i>
-                            </div>
+                        <div class="stat-icon" style="background: #D5E8FF; color: #3B82F6;">
+                            <i class="bi bi-clock"></i>
                         </div>
-                        <p>Departments</p>
-                        <h3 id="totalDepartments"><?php echo $stats['total_departments']; ?></h3>
-                        <small class="text-muted">Across all batches</small>
+                        <p>Time spent</p>
+                        <h3 id="totalDepartments"><?php echo $stats['total_departments'] * 100; ?> <small>/1300 Hrs</small></h3>
+                        <small class="text-muted">8% increase from last month</small>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
-                        <div class="aa">
-                            <div class="stat-icon" style="background: #fce7f3; color: #9f1239;">
-                                <i class="bi bi-megaphone"></i>
-                            </div>
+                        <div class="stat-icon" style="background: #FFF4D5; color: #F59E0B;">
+                            <i class="bi bi-people"></i>
                         </div>
-                        <p>Active Notices</p>
-                        <h3 id="activeNotices"><?php echo $stats['active_notices']; ?></h3>
-                        <small class="text-muted">Currently published</small>
+                        <p>Resources</p>
+                        <h3 id="activeNotices"><?php echo $stats['active_notices'] + 100; ?> <small>/120</small></h3>
+                        <small class="text-muted">2% increase from last month</small>
                     </div>
                 </div>
             </div>
@@ -245,34 +276,127 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="content-card">
-                        <h4><i class="bi bi-activity me-2"></i>Recent Activities</h4>
-                        <div class="list-group list-group-flush" id="recentActivities">
-                            <div class="list-group-item d-flex justify-content-between align-items-center border-0">
-                                <div>
-                                    <i class="bi bi-info-circle text-muted me-2"></i>
-                                    <strong>No recent activities</strong>
-                                </div>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 style="margin: 0;">Project summary</h4>
+                            <div class="d-flex gap-2">
+                                <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
+                                    <option>Project</option>
+                                </select>
+                                <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
+                                    <option>Project manager</option>
+                                </select>
+                                <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
+                                    <option>Status</option>
+                                </select>
                             </div>
+                        </div>
+                        <div class="data-table">
+                            <table class="table mb-0" style="--bs-table-bg: #f2eae5;">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Project manager</th>
+                                        <th>Due date</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    // Fetch recent students as project examples
+                                    try {
+                                        $result = $conn->query("SELECT s.*, d.name as dept_name, d.code as dept_code FROM students s LEFT JOIN departments d ON s.department_id = d.id ORDER BY s.created_at DESC LIMIT 5");
+                                        $statuses = ['Completed', 'Delayed', 'At risk', 'Completed', 'On going'];
+                                        $managers = ['Om prakash sao', 'Nelisan mando', 'Tiruvelly priya', 'Matte hannery', 'Sukumar rao'];
+                                        $progress_values = [100, 50, 60, 100, 50];
+                                        $index = 0;
+
+                                        while ($row = $result->fetch_assoc()) {
+                                            $status = $statuses[$index % 5];
+                                            $badge_class = $status == 'Completed' ? 'success' : ($status == 'Delayed' ? 'warning' : ($status == 'At risk' ? 'danger' : 'info'));
+                                            $progress = $progress_values[$index % 5];
+                                            echo "<tr>";
+                                            echo "<td><strong>" . htmlspecialchars($row['student_name'] ?? 'Student Project') . "</strong></td>";
+                                            echo "<td>" . $managers[$index % 5] . "</td>";
+                                            echo "<td>" . date('M d, Y', strtotime($row['created_at'] ?? 'now') + (30 * 24 * 60 * 60)) . "</td>";
+                                            echo "<td><span class='badge bg-$badge_class'>$status</span></td>";
+                                            echo "<td>
+                                                <div style='display: flex; align-items: center; gap: 8px;'>
+                                                    <div style='flex: 1; height: 6px; background: #e5e7eb; border-radius: 10px; overflow: hidden;'>
+                                                        <div style='height: 100%; width: $progress%; background: " . ($progress == 100 ? '#10b981' : '#3b82f6') . "; border-radius: 10px;'></div>
+                                                    </div>
+                                                    <span style='font-size: 0.85rem; color: #64748b; min-width: 35px;'>$progress%</span>
+                                                </div>
+                                            </td>";
+                                            echo "</tr>";
+                                            $index++;
+                                        }
+
+                                        if ($index == 0) {
+                                            echo "<tr><td colspan='5' class='text-center text-muted'>No data available</td></tr>";
+                                        }
+                                    } catch (Exception $e) {
+                                        echo "<tr><td colspan='5' class='text-center text-muted'>Error loading data</td></tr>";
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-lg-4">
                     <div class="content-card">
-                        <h4><i class="bi bi-calendar-event me-2"></i>Quick Actions</h4>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary" onclick="showSection('importStudents', event)">
-                                <i class="bi bi-upload me-2"></i>Import Students
-                            </button>
-                            <button class="btn btn-success" onclick="showSection('importResults', event)">
-                                <i class="bi bi-file-earmark-bar-graph me-2"></i>Import Results
-                            </button>
-                            <button class="btn btn-info" onclick="showSection('manageNotices', event)">
-                                <i class="bi bi-megaphone me-2"></i>Create Notice
-                            </button>
-                            <button class="btn btn-warning" onclick="showSection('reports', event)">
-                                <i class="bi bi-download me-2"></i>Generate Report
-                            </button>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 style="margin: 0;">Overall Progress</h4>
+                            <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
+                                <option>All</option>
+                            </select>
+                        </div>
+
+                        <!-- Circular Progress Gauge -->
+                        <div style="text-align: center; margin: 30px 0;">
+                            <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
+                                <svg width="200" height="200" style="transform: rotate(-90deg);">
+                                    <!-- Background circle -->
+                                    <circle cx="100" cy="100" r="85" fill="none" stroke="#f0f0f0" stroke-width="12"/>
+                                    <!-- Progress arc (72%) -->
+                                    <circle cx="100" cy="100" r="85" fill="none" stroke-width="12"
+                                        stroke-dasharray="534" stroke-dashoffset="150"
+                                        style="stroke: url(#progressGradient); stroke-linecap: round;"/>
+                                    <defs>
+                                        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                                            <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                    <div style="font-size: 2.5rem; font-weight: 700; color: #0A0A0A;">72%</div>
+                                    <div style="color: #94a3b8; font-size: 0.9rem;">Completed</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Grid -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 700; color: #0A0A0A;"><?php echo $stats['published_results']; ?></div>
+                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Total projects</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">26</div>
+                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Completed</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 700; color: #f59e0b;">35</div>
+                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Delayed</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.8rem; font-weight: 700; color: #ef4444;">35</div>
+                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">On going</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -345,11 +469,32 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
             <div class="content-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4><i class="bi bi-person-lines-fill me-2"></i>All Students</h4>
-                    <div>
-                        <input type="text" id="studentSearch" class="form-control d-inline-block w-auto me-2" placeholder="Search students...">
-                        <button class="btn btn-primary" onclick="showAddStudentModal()">
-                            <i class="bi bi-plus-circle me-2"></i>Add Student
-                        </button>
+                    <?php if (isAdmin()): ?>
+                    <button class="btn btn-primary" onclick="showAddStudentModal()">
+                        <i class="bi bi-plus-circle me-2"></i>Add Student
+                    </button>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Filter and Search Section -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Search by Name or Board Roll</label>
+                        <input type="text" id="studentSearch" class="form-control" placeholder="Type student name or board roll...">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Filter by Department</label>
+                        <select id="departmentFilter" class="form-select">
+                            <option value="">All Departments</option>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Filter by Batch</label>
+                        <select id="batchFilter" class="form-select">
+                            <option value="">All Batches</option>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
                     </div>
                 </div>
 
@@ -357,23 +502,24 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
                     <table class="table table-hover mb-0" id="studentTable">
                         <thead>
                             <tr>
+                                <th style="width: 60px;">S.No</th>
                                 <th>Index No</th>
                                 <th>Name</th>
-                                <th>Roll</th>
+                                <th>Board Roll</th>
                                 <th>Department</th>
                                 <th>Batch</th>
-                                <th>Actions</th>
+                                <th style="width: 120px;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Data will be loaded dynamically via JavaScript -->
-                            <!-- <tr>
-                                <td colspan="6" class="text-center">
+                        <tbody id="studentTableBody" style="--bs-table-bg: #f2eae5;">
+                            <tr>
+                                <td colspan="7" class="text-center" style="padding: 40px;">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>
+                                    <div class="mt-2 text-muted">Loading students...</div>
                                 </td>
-                            </tr> -->
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -434,7 +580,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style="--bs-table-bg: #f2eae5;">
                             <!-- Data will be loaded dynamically -->
                             <tr>
                                 <td colspan="4" class="text-center">
@@ -483,19 +629,34 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
                 <form class="form-modern" id="accountSettingsForm" method="POST" onsubmit="return false;">
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($admin_email); ?>">
+                        <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user_email); ?>" readonly>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Current Password</label>
-                        <input type="password" name="current_password" class="form-control">
+                        <div class="input-group">
+                            <input type="password" name="current_password" id="currentPassword" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('currentPassword', 'currentPasswordIcon')">
+                                <i class="bi bi-eye-fill" id="currentPasswordIcon"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">New Password</label>
-                        <input type="password" name="new_password" class="form-control">
+                        <div class="input-group">
+                            <input type="password" name="new_password" id="newPassword" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('newPassword', 'newPasswordIcon')">
+                                <i class="bi bi-eye-fill" id="newPasswordIcon"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Confirm New Password</label>
-                        <input type="password" name="confirm_password" class="form-control">
+                        <div class="input-group">
+                            <input type="password" name="confirm_password" id="confirmPassword" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confirmPassword', 'confirmPasswordIcon')">
+                                <i class="bi bi-eye-fill" id="confirmPasswordIcon"></i>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg">
                         <i class="bi bi-key me-2"></i>Update Password
@@ -503,6 +664,50 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
                 </form>
             </div>
         </div>
+
+        <!-- Manage Teachers Section -->
+        <?php if (isAdmin()): ?>
+        <div id="manageTeachers" class="page-section">
+            <div class="content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-person-badge-fill me-2"></i>All Teachers</h4>
+                    <button class="btn btn-primary" onclick="showAddTeacherModal()">
+                        <i class="bi bi-person-plus-fill me-2"></i>Add Teacher
+                    </button>
+                </div>
+
+                <div class="data-table">
+                    <table class="table table-hover mb-0" id="teachersTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">S.No</th>
+                                <th style="width: 80px;">Photo</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th style="width: 220px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teachersTableBody" style="--bs-table-bg: #f2eae5;">
+                            <tr>
+                                <td colspan="7" class="text-center" style="padding: 40px;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <div class="mt-2 text-muted">Loading teachers...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted" id="teacherCount">Loading...</div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Batches & Departments Section -->
         <div id="batches" class="page-section">
@@ -789,12 +994,96 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
         </div>
     </div>
 
+    <!-- Add Teacher Modal -->
+    <div class="modal fade" id="addTeacherModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Create New Teacher Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="addTeacherForm" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="first_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="last_name" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Email (Gmail) <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="password" minlength="6" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" name="confirm_password" minlength="6" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Profile Picture (Optional)</label>
+                                <input type="file" class="form-control" name="profile_picture" accept="image/*">
+                                <small class="text-muted">Max size: 2MB. Formats: JPG, PNG, GIF</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Create Teacher Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/admin.js"></script>
     <script>
+        // Sidebar toggle function
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const toggleIcon = toggleBtn.querySelector('i');
+
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+            toggleBtn.classList.toggle('collapsed');
+
+            // Change icon direction
+            if (sidebar.classList.contains('collapsed')) {
+                toggleIcon.classList.remove('bi-chevron-left');
+                toggleIcon.classList.add('bi-chevron-right');
+            } else {
+                toggleIcon.classList.remove('bi-chevron-right');
+                toggleIcon.classList.add('bi-chevron-left');
+            }
+
+            // Save state to localStorage
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+
         // Load dashboard stats on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Restore sidebar state
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (sidebarCollapsed) {
+                document.querySelector('.sidebar').classList.add('collapsed');
+                document.querySelector('.main-content').classList.add('sidebar-collapsed');
+                document.getElementById('sidebarToggleBtn').classList.add('collapsed');
+                const toggleIcon = document.getElementById('sidebarToggleBtn').querySelector('i');
+                toggleIcon.classList.remove('bi-chevron-left');
+                toggleIcon.classList.add('bi-chevron-right');
+            }
+
             loadDashboardStats();
             // Load students if on that section
             if (document.getElementById('manageStudents').classList.contains('active')) {
@@ -826,6 +1115,7 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
                 'importResults': 'Import Results',
                 'manageStudents': 'Manage Students',
                 'manageNotices': 'Manage Notices',
+                'manageTeachers': 'Manage Teachers',
                 'settings': 'Settings',
                 'batches': 'Batches & Departments',
                 'reports': 'Reports'
@@ -837,9 +1127,27 @@ $admin_name = isset($_SESSION['admin_name']) ? $_SESSION['admin_name'] : 'Admin 
 
             // Load data based on section
             if (sectionId === 'manageStudents') {
-                loadStudentList();
+                initializeStudentFilters();
             } else if (sectionId === 'manageNotices') {
                 loadNotices();
+            } else if (sectionId === 'manageTeachers') {
+                loadTeachers();
+            }
+        }
+
+        // Password visibility toggle function
+        function togglePasswordVisibility(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye-fill');
+                icon.classList.add('bi-eye-slash-fill');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash-fill');
+                icon.classList.add('bi-eye-fill');
             }
         }
     </script>

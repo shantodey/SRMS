@@ -3,14 +3,17 @@ session_start();
 require_once '../config/database.php';
 require_once 'auth.php';
 
+header('Content-Type: application/json');
+
 // Check if user is logged in
 if (!isLoggedIn()) {
     echo json_encode(['success' => false, 'message' => 'Not authenticated']);
     exit();
 }
 
-// Get current admin ID
-$admin_id = $_SESSION['admin_id'];
+// Get user info
+$user_id = $_SESSION['user_id'];
+$user_type = $_SESSION['user_type'] ?? 'admin';
 
 // Get POST data
 $current_password = $_POST['current_password'] ?? '';
@@ -35,22 +38,25 @@ if (strlen($new_password) < 6) {
     exit();
 }
 
-// Get current admin data
-$query = "SELECT * FROM admin WHERE id = ?";
+// Determine which table to query based on user type
+$table = ($user_type === 'admin') ? 'admin' : 'teachers';
+
+// Get current user data
+$query = "SELECT * FROM $table WHERE id = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $admin_id);
+$stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows !== 1) {
-    echo json_encode(['success' => false, 'message' => 'Admin account not found']);
+    echo json_encode(['success' => false, 'message' => 'Account not found']);
     exit();
 }
 
-$admin = $result->fetch_assoc();
+$user = $result->fetch_assoc();
 
 // Verify current password
-if (!password_verify($current_password, $admin['password'])) {
+if (!password_verify($current_password, $user['password'])) {
     echo json_encode(['success' => false, 'message' => 'Current password is incorrect']);
     exit();
 }
@@ -59,9 +65,9 @@ if (!password_verify($current_password, $admin['password'])) {
 $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
 // Update password in database
-$update_query = "UPDATE admin SET password = ? WHERE id = ?";
+$update_query = "UPDATE $table SET password = ? WHERE id = ?";
 $update_stmt = $conn->prepare($update_query);
-$update_stmt->bind_param("si", $hashed_password, $admin_id);
+$update_stmt->bind_param("si", $hashed_password, $user_id);
 
 if ($update_stmt->execute()) {
     echo json_encode([

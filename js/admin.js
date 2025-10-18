@@ -102,34 +102,170 @@ function showSection(sectionId) {
     }
 }
 
-// Function to load student list
-function loadStudentList() {
-    fetch('admin/get_students.php')
+// ================================================
+// STUDENT FILTERING AND LOADING
+// ================================================
+
+// Function to load departments into dropdown
+function loadDepartments() {
+    fetch('admin/get_departments.php')
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const tbody = document.querySelector('#studentTable tbody');
+            const select = document.getElementById('departmentFilter');
+            // Keep the "All Departments" option
+            select.innerHTML = '<option value="">All Departments</option>';
+            data.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = `${dept.name} (${dept.code})`;
+                select.appendChild(option);
+            });
+        }
+    })
+    .catch(error => console.error('Error loading departments:', error));
+}
+
+// Function to load batches into dropdown
+function loadBatches() {
+    fetch('admin/get_batches.php')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.getElementById('batchFilter');
+            // Keep the "All Batches" option
+            select.innerHTML = '<option value="">All Batches</option>';
+            data.batches.forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.id;
+                option.textContent = `${batch.name} (${batch.year})`;
+                select.appendChild(option);
+            });
+        }
+    })
+    .catch(error => console.error('Error loading batches:', error));
+}
+
+// Function to load student list with filters
+function loadStudentList() {
+    // Get filter values
+    const search = document.getElementById('studentSearch')?.value || '';
+    const departmentId = document.getElementById('departmentFilter')?.value || '';
+    const batchId = document.getElementById('batchFilter')?.value || '';
+
+    // Build query string
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (departmentId) params.append('department', departmentId);
+    if (batchId) params.append('batch', batchId);
+
+    // Show loading state
+    const tbody = document.getElementById('studentTableBody');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center" style="padding: 40px;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="mt-2 text-muted">Loading students...</div>
+            </td>
+        </tr>
+    `;
+
+    fetch(`admin/get_students.php?${params.toString()}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             tbody.innerHTML = '';
-            
+
+            if (data.students.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted" style="padding: 40px;">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <div class="mt-3">No students found</div>
+                            <small>Try adjusting your filters or search term</small>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('studentCount').textContent = 'No students found';
+                return;
+            }
+
             data.students.forEach(student => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${student.index_no}</strong></td>
-                    <td>${student.student_name}</td>
-                    <td>${student.roll_no}</td>
-                    <td><span class="badge bg-primary">${student.department_code}</span></td>
-                    <td>${student.batch_year}</td>
+                    <td><strong style="color: #64748b;">${student.s_no}</strong></td>
+                    <td><span class="badge" style="background: #e0e7ff; color: #4338ca; font-weight: 600;">${student.index_no}</span></td>
+                    <td><strong>${student.student_name}</strong></td>
+                    <td>${student.board_roll || 'N/A'}</td>
+                    <td><span class="badge" style="background: #dcfce7; color: #166534;">${student.department_code}</span></td>
+                    <td><span class="badge" style="background: #fef3c7; color: #92400e;">${student.batch_name}</span></td>
                     <td>
-                        <button class="action-btn btn-view" onclick="viewStudent(${student.id})"><i class="bi bi-eye"></i></button>
-                        <button class="action-btn btn-edit" onclick="editStudent(${student.id})"><i class="bi bi-pencil"></i></button>
-                        <button class="action-btn btn-delete" onclick="deleteStudent(${student.id})"><i class="bi bi-trash"></i></button>
+                        <button class="action-btn btn-view" onclick="viewStudent(${student.id})" title="View Details"><i class="bi bi-eye"></i></button>
+                        <button class="action-btn btn-edit" onclick="editStudent(${student.id})" title="Edit Student"><i class="bi bi-pencil"></i></button>
+                        <button class="action-btn btn-delete" onclick="deleteStudent(${student.id})" title="Delete Student"><i class="bi bi-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Update count
+            const countText = data.total === 1 ? '1 student found' : `${data.total} students found`;
+            document.getElementById('studentCount').textContent = countText;
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-danger" style="padding: 40px;">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                    <div class="mt-3">Error loading students</div>
+                    <small>${error.message}</small>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// Initialize filters when manage students section is shown
+function initializeStudentFilters() {
+    // Load dropdowns
+    loadDepartments();
+    loadBatches();
+
+    // Add event listeners for filters
+    const searchInput = document.getElementById('studentSearch');
+    const departmentFilter = document.getElementById('departmentFilter');
+    const batchFilter = document.getElementById('batchFilter');
+
+    // Debounce search input
+    let searchTimeout;
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadStudentList();
+            }, 500); // Wait 500ms after user stops typing
+        });
+    }
+
+    // Immediate reload on filter change
+    if (departmentFilter) {
+        departmentFilter.addEventListener('change', () => {
+            loadStudentList();
+        });
+    }
+
+    if (batchFilter) {
+        batchFilter.addEventListener('change', () => {
+            loadStudentList();
+        });
+    }
+
+    // Load initial data
+    loadStudentList();
 }
 
 // Function to load dashboard statistics
@@ -180,6 +316,11 @@ function handleFileUpload(fileType) {
 
         // Show loading state
         const uploadZone = document.querySelector(`#${fileType}UploadZone`);
+        if (!uploadZone) {
+            console.error(`Upload zone #${fileType}UploadZone not found`);
+            alert('Error: Upload zone not found');
+            return;
+        }
         const originalContent = uploadZone.innerHTML;
         uploadZone.innerHTML = '<div class="spinner-border text-primary" role="status"></div><div class="mt-2">Processing...</div>';
 
@@ -187,22 +328,38 @@ function handleFileUpload(fileType) {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(async response => {
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
+                throw new Error(`Server error (${response.status}): ${errorText.slice(0, 200)}`);
+            }
+            try {
+                return response.json();
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                throw new Error('Failed to parse server response as JSON');
+            }
+        })
         .then(data => {
             if (data.success) {
                 // Show success message and preview
-                showUploadPreview(fileType, data);
+                try {
+                    showUploadPreview(fileType, data);
+                } catch (err) {
+                    console.error('Error showing preview:', err);
+                }
 
                 // Show detailed results
                 let message = `Upload completed!\n\n`;
-                message += `✓ Success: ${data.stats.success} records\n`;
-                if (data.stats.failed > 0) {
+                message += `✓ Success: ${data.stats?.success || 0} records\n`;
+                if (data.stats?.failed > 0) {
                     message += `✗ Failed: ${data.stats.failed} records\n\n`;
                     message += `Errors:\n`;
-                    data.stats.errors.slice(0, 5).forEach(err => {
+                    data.stats.errors?.slice(0, 5)?.forEach(err => {
                         message += `- ${err}\n`;
                     });
-                    if (data.stats.errors.length > 5) {
+                    if (data.stats.errors?.length > 5) {
                         message += `... and ${data.stats.errors.length - 5} more errors`;
                     }
                 }
@@ -220,7 +377,9 @@ function handleFileUpload(fileType) {
         .catch(error => {
             console.error('Error:', error);
             alert('An error occurred during upload: ' + error.message);
-            uploadZone.innerHTML = originalContent;
+            if (uploadZone) {
+                uploadZone.innerHTML = originalContent;
+            }
         });
     };
 
@@ -230,11 +389,18 @@ function handleFileUpload(fileType) {
 // Function to show preview of uploaded data
 function showUploadPreview(type, responseData) {
     const previewDiv = document.querySelector(`#${type}Preview`);
-    if (!previewDiv || !responseData.data || responseData.data.length === 0) return;
+    if (!previewDiv) {
+        console.error(`Preview div #${type}Preview not found`);
+        return;
+    }
+    if (!responseData?.data || !Array.isArray(responseData.data) || responseData.data.length === 0) {
+        console.error('No valid data to preview:', responseData);
+        return;
+    }
 
     let tableHTML = '<div class="alert alert-success mt-4">';
-    tableHTML += `<strong>Import Summary:</strong> ${responseData.stats.success} records imported successfully`;
-    if (responseData.stats.failed > 0) {
+    tableHTML += `<strong>Import Summary:</strong> ${responseData.stats?.success || 0} records imported successfully`;
+    if (responseData.stats?.failed > 0) {
         tableHTML += `, ${responseData.stats.failed} failed`;
     }
     tableHTML += '</div>';
@@ -878,5 +1044,290 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize drop zones
     initializeDropZones();
+
+    // Teacher Form Submit
+    const addTeacherForm = document.getElementById('addTeacherForm');
+    if (addTeacherForm) {
+        addTeacherForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            // Validate passwords match
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirm_password');
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+
+            // Submit via AJAX
+            fetch('admin/create_teacher.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+
+                if (data.success) {
+                    alert(data.message);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addTeacherModal'));
+                    if (modal) modal.hide();
+                    addTeacherForm.reset();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to create teacher account'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                alert('An error occurred. Please try again.');
+            });
+        });
+    }
 });
+
+// ====================================
+// TEACHER MANAGEMENT FUNCTIONS
+// ====================================
+
+function showAddTeacherModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addTeacherModal'));
+    modal.show();
+}
+
+// Load all teachers (admin only)
+function loadTeachers() {
+    const tbody = document.getElementById('teachersTableBody');
+
+    // Show loading state
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" class="text-center" style="padding: 40px;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="mt-2 text-muted">Loading teachers...</div>
+            </td>
+        </tr>
+    `;
+
+    fetch('admin/get_teachers.php')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            tbody.innerHTML = '';
+
+            if (data.teachers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center text-muted" style="padding: 40px;">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <div class="mt-3">No teachers found</div>
+                            <small>Click "Add Teacher" to create the first teacher account</small>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('teacherCount').textContent = 'No teachers found';
+                return;
+            }
+
+            data.teachers.forEach(teacher => {
+                const tr = document.createElement('tr');
+                const statusBadge = teacher.status === 'active'
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>';
+
+                const createdDate = new Date(teacher.created_at).toLocaleDateString();
+
+                // Display profile picture or initials
+                let photoHTML = '';
+                if (teacher.profile_picture && teacher.profile_picture !== null) {
+                    photoHTML = `<img src="uploads/teacher_profiles/${teacher.profile_picture}"
+                                     alt="${teacher.full_name}"
+                                     class="teacher-profile-img"
+                                     onerror="this.outerHTML='<div class=\\'teacher-avatar-placeholder\\'>${teacher.first_name.charAt(0)}${teacher.last_name.charAt(0)}</div>'">`;
+                } else {
+                    photoHTML = `<div class="teacher-avatar-placeholder">${teacher.first_name.charAt(0)}${teacher.last_name.charAt(0)}</div>`;
+                }
+
+                tr.innerHTML = `
+                    <td><strong style="color: #64748b;">${teacher.s_no}</strong></td>
+                    <td>${photoHTML}</td>
+                    <td><strong>${teacher.full_name}</strong></td>
+                    <td>${teacher.email}</td>
+                    <td>${statusBadge}</td>
+                    <td>${createdDate}</td>
+                    <td>
+                        <button class="action-btn btn-view" onclick="generateTempPassword(${teacher.id}, '${teacher.full_name}')" title="Generate Temporary Password">
+                            <i class="bi bi-lock-fill"></i>
+                        </button>
+                        <button class="action-btn btn-edit" onclick="resetTeacherPassword(${teacher.id}, '${teacher.full_name}')" title="Reset Password">
+                            <i class="bi bi-key"></i>
+                        </button>
+                        <button class="action-btn btn-delete" onclick="deleteTeacher(${teacher.id}, '${teacher.full_name}')" title="Delete Teacher">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update count
+            const countText = data.total === 1 ? '1 teacher' : `${data.total} teachers`;
+            document.getElementById('teacherCount').textContent = countText;
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-danger" style="padding: 40px;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                        <div class="mt-3">Error loading teachers</div>
+                        <small>${data.message}</small>
+                    </td>
+                </tr>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-danger" style="padding: 40px;">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                    <div class="mt-3">Error loading teachers</div>
+                    <small>${error.message}</small>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// Generate temporary password for teacher
+function generateTempPassword(teacherId, teacherName) {
+    if (!confirm(`Generate a new temporary password for ${teacherName}?\n\nThis will replace their current password.`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('teacher_id', teacherId);
+
+    fetch('admin/generate_temp_password.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Create a nice modal-like alert with the password
+            const message = `
+✅ Temporary Password Generated Successfully!
+
+Teacher: ${data.teacher_name}
+Email: ${data.teacher_email}
+
+🔑 NEW PASSWORD: ${data.temp_password}
+
+📋 Please copy this password and share it with the teacher.
+⚠️ This password will NOT be shown again!
+
+The teacher should login and change this password immediately.
+            `.trim();
+
+            alert(message);
+
+            // Optional: Copy to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(data.temp_password).then(() => {
+                    console.log('Password copied to clipboard');
+                });
+            }
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while generating password');
+    });
+}
+
+// Reset teacher password (manual entry)
+function resetTeacherPassword(teacherId, teacherName) {
+    const newPassword = prompt(`Reset password for ${teacherName}:\n\nEnter new password (minimum 6 characters):`);
+
+    if (!newPassword) return;
+
+    if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters long!');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to reset the password for ${teacherName}?`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('teacher_id', teacherId);
+    formData.append('new_password', newPassword);
+
+    fetch('admin/reset_teacher_password.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message + '\n\nNew Password: ' + newPassword + '\n\nPlease share this with the teacher.');
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while resetting password');
+    });
+}
+
+// Delete teacher account
+function deleteTeacher(teacherId, teacherName) {
+    if (!confirm(`Are you sure you want to delete ${teacherName}'s account?\n\nThis action cannot be undone and will permanently remove:\n- Teacher login access\n- Profile picture\n\nNotices created by this teacher will remain.`)) {
+        return;
+    }
+
+    // Double confirmation for safety
+    if (!confirm(`Final confirmation: Delete ${teacherName}?`)) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('teacher_id', teacherId);
+
+    fetch('admin/delete_teacher.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadTeachers(); // Reload the teacher list
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting the teacher');
+    });
+}
 

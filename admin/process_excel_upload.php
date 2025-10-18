@@ -1,11 +1,12 @@
 <?php
-// Start output buffering to prevent any output before JSON
-ob_start();
-
-// Suppress all errors from being displayed
+// Set error handling
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php_errors.log');
+
+// Start output buffering
+ob_start();
 
 session_start();
 require_once '../config/database.php';
@@ -13,67 +14,125 @@ require '../vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-// Clear any output that might have been generated
-ob_end_clean();
-
-header('Content-Type: application/json');
-$response = ['success' => false, 'message' => '', 'data' => [], 'stats' => ['success' => 0, 'failed' => 0, 'errors' => []]];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        if (!isset($_FILES['file'])) {
-            throw new Exception('No file uploaded');
-        }
-
-        // Validate file type
-        $allowedExtensions = ['xlsx', 'xls'];
-        $fileExtension = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
-
-        if (!in_array($fileExtension, $allowedExtensions)) {
-            throw new Exception('Invalid file type. Only .xlsx and .xls files are allowed.');
-        }
-
-        // Validate file size (max 5MB)
-        $maxFileSize = 5 * 1024 * 1024; // 5MB
-        if ($_FILES['file']['size'] > $maxFileSize) {
-            throw new Exception('File size exceeds 5MB limit.');
-        }
-
-        $inputFileName = $_FILES['file']['tmp_name'];
-        $spreadsheet = IOFactory::load($inputFileName);
-        $worksheet = $spreadsheet->getActiveSheet();
-        $rows = $worksheet->toArray();
-
-        // Remove header row
-        $headers = array_shift($rows);
-
-        // Start transaction
-        $conn->begin_transaction();
-
-        if ($_POST['type'] === 'students') {
-            processStudents($conn, $rows, $response);
-        } else if ($_POST['type'] === 'results') {
-            processResults($conn, $rows, $response);
-        } else {
-            throw new Exception('Invalid upload type');
-        }
-
-        // Commit transaction
-        $conn->commit();
-
-        $response['success'] = true;
-        $response['message'] = "Import completed. Success: {$response['stats']['success']}, Failed: {$response['stats']['failed']}";
-
-    } catch (Exception $e) {
-        // Rollback transaction on error
-        if (isset($conn) && $conn->connect_errno === 0) {
-            $conn->rollback();
-        }
-        $response['message'] = 'Error: ' . $e->getMessage();
+// Helper function for upload errors
+function upload_error_message($code) {
+    switch ($code) {
+        case UPLOAD_ERR_INI_SIZE:
+            return 'The uploaded file exceeds the upload_max_filesize directive in php.ini';
+        case UPLOAD_ERR_FORM_SIZE:
+            return 'The uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form';
+        case UPLOAD_ERR_PARTIAL:
+            return 'The uploaded file was only partially uploaded';
+        case UPLOAD_ERR_NO_FILE:
+            return 'No file was uploaded';
+        case UPLOAD_ERR_NO_TMP_DIR:
+            return 'Missing a temporary folder';
+        case UPLOAD_ERR_CANT_WRITE:
+            return 'Failed to write file to disk';
+        case UPLOAD_ERR_EXTENSION:
+            return 'File upload stopped by extension';
+        default:
+            return 'Unknown upload error';
     }
 }
 
-echo json_encode($response);
+// Clear any previous output and set JSON header
+while (ob_get_level()) {
+    ob_end_clean();
+}
+header('Content-Type: application/json; charset=utf-8');
+
+// Initialize response array
+$response = ['success' => false, 'message' => '', 'data' => [], 'stats' => ['success' => 0, 'failed' => 0, 'errors' => []]];
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $response['message'] = 'Invalid request method';
+    echo json_encode($response);
+    exit;
+}
+
+try {
+    // Verify file upload
+    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+        $error = isset($_FILES['file']) ? upload_error_message($_FILES['file']['error']) : 'No file uploaded';
+        throw new Exception($error);
+    }
+
+    if (!isset($_POST['type'])) {
+        throw new Exception('Upload type not specified');
+    }
+
+    // Validate file type
+    $allowedExtensions = ['xlsx', 'xls'];
+    $fileExtension = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($fileExtension, $allowedExtensions)) {
+        throw new Exception('Invalid file type. Only .xlsx and .xls files are allowed.');
+    }
+
+    // Validate file size (max 5MB)
+    $maxFileSize = 5 * 1024 * 1024; // 5MB
+    if ($_FILES['file']['size'] > $maxFileSize) {
+        throw new Exception('File size exceeds 5MB limit.');
+    }
+
+    $inputFileName = $_FILES['file']['tmp_name'];
+    
+    try {
+        $spreadsheet = IOFactory::load($inputFileName);
+    } catch (Exception $e) {
+        throw new Exception('Error reading file: ' . $e->getMessage());
+    }
+    
+    $worksheet = $spreadsheet->getActiveSheet();
+    $rows = $worksheet->toArray();
+
+    if (count($rows) <= 1) {
+        throw new Exception('File appears to be empty or contains only headers');
+    }
+
+    // Remove header row
+    $headers = array_shift($rows);
+
+    // Start transaction
+    $conn->begin_transaction();
+
+    if ($_POST['type'] === 'students') {
+        processStudents($conn, $rows, $response);
+    } else if ($_POST['type'] === 'results') {
+        processResults($conn, $rows, $response);
+    } else {
+        throw new Exception('Invalid upload type');
+    }
+
+    // Commit transaction
+    $conn->commit();
+
+    $response['success'] = true;
+    $response['message'] = "Import completed. Success: {$response['stats']['success']}, Failed: {$response['stats']['failed']}";
+} catch (Exception $e) {
+    // Rollback transaction on error
+    if (isset($conn) && $conn->connect_errno === 0) {
+        $conn->rollback();
+    }
+    $response['message'] = 'Error: ' . $e->getMessage();
+    error_log('Excel upload error: ' . $e->getMessage());
+}
+
+// Ensure proper JSON encoding
+try {
+    $jsonResponse = json_encode($response, JSON_THROW_ON_ERROR);
+    if ($jsonResponse === false) {
+        throw new Exception(json_last_error_msg());
+    }
+    echo $jsonResponse;
+} catch (Exception $e) {
+    // If JSON encoding fails, send a basic error response
+    echo json_encode([
+        'success' => false,
+        'message' => 'Error encoding response: ' . $e->getMessage()
+    ]);
+}
 
 // Function to process student data
 function processStudents($conn, $rows, &$response) {
@@ -88,17 +147,17 @@ function processStudents($conn, $rows, &$response) {
         }
 
         try {
-            // Validate required fields
+            // Validate required fields (roll number is optional)
             if (empty($row[0]) || empty($row[1]) || empty($row[2]) || empty($row[3]) ||
-                empty($row[4]) || empty($row[5]) || empty($row[6])) {
-                throw new Exception("Missing required fields in row $rowNumber");
+                empty($row[5]) || empty($row[6])) {
+                throw new Exception("Missing required fields in row $rowNumber. Required: Batch Year, Semester, Department Code, Student Name, Index No, Board Roll");
             }
 
             $batchYear = trim($row[0]);
             $semester = trim($row[1]);
             $departmentCode = strtoupper(trim($row[2]));
             $studentName = trim($row[3]);
-            $rollNo = trim($row[4]);
+            $rollNo = !empty($row[4]) ? trim($row[4]) : ''; // Roll number is optional
             $indexNo = trim($row[5]);
             $boardRoll = trim($row[6]);
 
@@ -128,7 +187,7 @@ function processStudents($conn, $rows, &$response) {
                              student_name = ?, roll_no = ?, index_no = ?, board_roll = ?
                              WHERE id = ?";
                 $updateStmt = $conn->prepare($updateSql);
-                $updateStmt->bind_param("isisssi", $batchId, $semester, $departmentId,
+                $updateStmt->bind_param("isisssis", $batchId, $semester, $departmentId,
                                        $studentName, $rollNo, $indexNo, $boardRoll, $existingStudent['id']);
                 $updateStmt->execute();
             } else {
@@ -136,7 +195,7 @@ function processStudents($conn, $rows, &$response) {
                 $insertSql = "INSERT INTO students (batch_id, semester, department_id, student_name, roll_no, index_no, board_roll)
                              VALUES (?, ?, ?, ?, ?, ?, ?)";
                 $insertStmt = $conn->prepare($insertSql);
-                $insertStmt->bind_param("iisssss", $batchId, $semester, $departmentId,
+                $insertStmt->bind_param("iiissss", $batchId, $semester, $departmentId,
                                        $studentName, $rollNo, $indexNo, $boardRoll);
                 $insertStmt->execute();
             }
@@ -168,14 +227,15 @@ function processResults($conn, $rows, &$response) {
         }
 
         try {
-            // Validate required fields
-            if (empty($row[0]) || empty($row[1]) || empty($row[2]) ||
-                empty($row[3]) || !isset($row[4]) || empty($row[5])) {
-                throw new Exception("Missing required fields in row $rowNumber");
+            // Validate required fields (either Index No or Board Roll is required, not both)
+            if ((empty($row[0]) && empty($row[1])) || // Need at least one: Index No or Board Roll
+                empty($row[2]) || empty($row[3]) ||   // Subject Code and Name
+                !isset($row[4]) || empty($row[5])) {  // Marks and Total Marks
+                throw new Exception("Missing required fields in row $rowNumber. Required: Either Index No or Board Roll, Subject Code, Subject Name, Marks, Total Marks");
             }
 
-            $indexNo = trim($row[0]);
-            $boardRoll = trim($row[1]);
+            $indexNo = !empty($row[0]) ? trim($row[0]) : '';    // Optional if Board Roll is provided
+            $boardRoll = !empty($row[1]) ? trim($row[1]) : '';  // Optional if Index No is provided
             $subjectCode = trim($row[2]);
             $subjectName = trim($row[3]);
             $marksObtained = floatval($row[4]);
@@ -277,9 +337,23 @@ function getDepartmentId($conn, $code) {
 
 // Helper function to get student ID
 function getStudentId($conn, $indexNo, $boardRoll) {
-    $sql = "SELECT id FROM students WHERE index_no = ? OR board_roll = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $indexNo, $boardRoll);
+    // Build dynamic query based on which identifier is provided
+    if (!empty($indexNo) && !empty($boardRoll)) {
+        $sql = "SELECT id FROM students WHERE index_no = ? OR board_roll = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ss", $indexNo, $boardRoll);
+    } elseif (!empty($indexNo)) {
+        $sql = "SELECT id FROM students WHERE index_no = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $indexNo);
+    } elseif (!empty($boardRoll)) {
+        $sql = "SELECT id FROM students WHERE board_roll = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $boardRoll);
+    } else {
+        return null;
+    }
+    
     $stmt->execute();
     $result = $stmt->get_result();
 

@@ -1,0 +1,6 @@
+[14-Oct-2025 16:28:26 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\SRMS\admin\process_excel_upload.php:190
+Stack trace:
+#0 C:\xampp\htdocs\SRMS\admin\process_excel_upload.php(190): mysqli_stmt->bind_param('isisssi', 10, '6th', 1, 'Patia Dio', '1', 'CST-M-1917', '759278', 8)
+#1 C:\xampp\htdocs\SRMS\admin\process_excel_upload.php(101): processStudents(Object(mysqli), Array, Array)
+#2 {main}
+  thrown in C:\xampp\htdocs\SRMS\admin\process_excel_upload.php on line 190

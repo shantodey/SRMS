@@ -1,9 +1,17 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once 'auth.php';
 
 header('Content-Type: application/json');
 $response = ['success' => false, 'message' => ''];
+
+// Check if user is logged in
+if (!isLoggedIn()) {
+    $response['message'] = 'Not authenticated';
+    echo json_encode($response);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'] ?? '';
@@ -18,15 +26,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // For now, use admin ID 1 (you should use the logged-in admin's ID from session)
-    $admin_id = $_SESSION['admin_id'] ?? 1;
+    // Get user info from session
+    $user_id = $_SESSION['user_id'];
+    $user_type = $_SESSION['user_type'] ?? 'admin';
 
     try {
-        $sql = "INSERT INTO notices (title, content, status, publish_date, created_by)
-                VALUES (?, ?, ?, ?, ?)";
+        // Check if creator_type and creator_id columns exist
+        $check_columns = $conn->query("SHOW COLUMNS FROM notices LIKE 'creator_type'");
 
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssi", $title, $content, $status, $publish_date, $admin_id);
+        if ($check_columns && $check_columns->num_rows > 0) {
+            // New structure with creator_type and creator_id
+            $sql = "INSERT INTO notices (title, content, status, publish_date, creator_type, creator_id)
+                    VALUES (?, ?, ?, ?, ?, ?)";
+
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssssi", $title, $content, $status, $publish_date, $user_type, $user_id);
+        } else {
+            // Old structure with created_by (admin only)
+            $admin_id = $user_id;
+            $sql = "INSERT INTO notices (title, content, status, publish_date, created_by)
+                    VALUES (?, ?, ?, ?, ?)";
+
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssssi", $title, $content, $status, $publish_date, $admin_id);
+        }
 
         if ($stmt->execute()) {
             $response['success'] = true;
