@@ -49,6 +49,20 @@ body {
     letter-spacing: -0.5px;
 }
 
+.bbk-navbar .navbar-toggler {
+    border: 2px solid white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+}
+
+.bbk-navbar .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+}
+
+.bbk-navbar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
 .bbk-navbar .nav-link {
     color: white !important;
     font-weight: 500;
@@ -60,8 +74,8 @@ body {
 }
 
 .bbk-navbar .nav-link:hover {
-    background: rgba(94, 179, 246, 0.1);
-    color: #4a9ed6 !important;
+    background: rgba(255, 255, 255, 0.2);
+    color: white !important;
 }
 
 .bbk-navbar .btn-login {
@@ -73,6 +87,7 @@ body {
     font-weight: 600;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(249, 168, 38, 0.3);
+    display: inline-block;
 }
 
 .bbk-navbar .btn-login:hover {
@@ -155,6 +170,7 @@ body {
     transition: all 0.3s ease;
     border-radius: 50px;
     margin: 4px;
+    white-space: nowrap;
 }
 
 .bbk-search-box button:hover {
@@ -170,6 +186,14 @@ body {
     margin: 0 auto;
     padding: 0 1rem 4rem;
     perspective: 1000px;
+    transition: opacity 0.3s ease;
+}
+
+.bbk-cards-section.hidden {
+    opacity: 0;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
 }
 
 .bbk-cards-container {
@@ -177,6 +201,93 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     transform-style: preserve-3d;
+}
+
+/* Mobile notices view */
+.bbk-notices-mobile {
+    display: none;
+}
+
+.bbk-notices-mobile-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.bbk-notices-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.bbk-notice-button {
+    background: white;
+    border: none;
+    border-radius: 15px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: left;
+    min-height: 70px;
+}
+
+.bbk-notice-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.bbk-notice-button:active {
+    transform: translateY(-1px);
+}
+
+.bbk-notice-button-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.bbk-notice-button-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.bbk-notice-button-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bbk-notice-button-date {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bbk-notice-button-arrow {
+    font-size: 1.25rem;
+    color: #5eb3f6;
+    flex-shrink: 0;
 }
 
 .bbk-card {
@@ -281,7 +392,36 @@ body {
     font-size: 0.95rem;
     color: #7f8c8d;
     line-height: 1.6;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.bbk-card-read-more {
+    display: inline-block;
+    color: #5eb3f6;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.bbk-card-read-more:hover {
+    color: #4a9ed6;
+    transform: translateX(3px);
+}
+
+.bbk-card-read-more i {
+    margin-left: 0.25rem;
+    transition: transform 0.3s ease;
+}
+
+.bbk-card-read-more:hover i {
+    transform: translateX(3px);
 }
 
 .bbk-card-footer {
@@ -567,7 +707,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    cursor: pointer;
 }
 
 .bbk-back-button:hover {
@@ -575,6 +715,21 @@ body {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(94, 179, 246, 0.3);
+}
+
+/* Action buttons wrapper */
+.bbk-action-buttons-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.bbk-action-buttons-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .bbk-table {
@@ -696,29 +851,335 @@ body {
 }
 
 /* ================================================ */
+/* NOTICE MODAL - Desktop & Mobile Styles */
+/* ================================================ */
+.bbk-notice-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.bbk-notice-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.bbk-notice-modal-container {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+.bbk-notice-modal-header {
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    color: white;
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.bbk-notice-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white !important;
+    margin: 0;
+    line-height: 1.3;
+    flex: 1;
+}
+
+.bbk-notice-modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.bbk-notice-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.bbk-notice-modal-body {
+    padding: 1.75rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.bbk-notice-modal-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid #ecf0f1;
+    flex-wrap: wrap;
+}
+
+.bbk-notice-modal-publisher,
+.bbk-notice-modal-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #5a6c7d;
+}
+
+.bbk-notice-modal-publisher i,
+.bbk-notice-modal-date i {
+    color: #5eb3f6;
+    font-size: 1.1rem;
+}
+
+.bbk-notice-modal-content {
+    color: #2c3e50;
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+.bbk-notice-modal-content p {
+    margin-bottom: 1rem;
+}
+
+.bbk-notice-modal-content h1,
+.bbk-notice-modal-content h2,
+.bbk-notice-modal-content h3,
+.bbk-notice-modal-content h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #2c3e50;
+}
+
+.bbk-notice-modal-content ul,
+.bbk-notice-modal-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.bbk-notice-modal-content a {
+    color: #5eb3f6;
+    text-decoration: underline;
+}
+
+.bbk-notice-modal-footer {
+    padding: 1.25rem 1.75rem;
+    border-top: 2px solid #ecf0f1;
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.bbk-notice-modal-footer .btn {
+    flex: 1;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUpMobile {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* ================================================ */
 /* RESPONSIVE DESIGN */
 /* ================================================ */
+
+/* Tablet and below (max-width: 992px) */
+@media (max-width: 992px) {
+    .bbk-navbar {
+        padding: 0.8rem 0;
+    }
+
+    .bbk-navbar .navbar-brand {
+        font-size: 1.3rem;
+    }
+
+    .bbk-navbar .nav-link {
+        margin: 0.3rem 0.5rem;
+        padding: 0.4rem 0.8rem !important;
+    }
+
+    .bbk-cards-container {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .bbk-result-container {
+        padding: 0 0.8rem;
+    }
+
+    .bbk-table {
+        font-size: 0.9rem;
+    }
+
+    .bbk-table th,
+    .bbk-table td {
+        padding: 0.8rem;
+    }
+}
+
+/* Mobile landscape and below (max-width: 768px) */
 @media (max-width: 768px) {
+    /* Hide desktop notice cards, show mobile buttons */
+    .bbk-notices-desktop {
+        display: none !important;
+    }
+
+    .bbk-notices-mobile {
+        display: block;
+    }
+
+    /* Mobile modal - full screen slide up */
+    .bbk-notice-modal {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .bbk-notice-modal-container {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: 20px 20px 0 0;
+        animation: slideUpMobile 0.3s ease;
+    }
+
+    .bbk-notice-modal-header {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .bbk-notice-modal-title {
+        font-size: 1.25rem;
+    }
+
+    .bbk-notice-modal-body {
+        padding: 1.5rem;
+    }
+
+    .bbk-notice-modal-footer {
+        flex-direction: column;
+        padding: 1rem 1.5rem;
+    }
+
+    .bbk-notice-modal-footer .btn {
+        width: 100%;
+    }
+
+    .bbk-hero {
+        padding: 3rem 0 2rem;
+    }
+
     .bbk-hero h1 {
         font-size: 2rem;
+        margin-bottom: 0.8rem;
     }
 
     .bbk-hero p {
         font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .bbk-search-container {
+        max-width: 100%;
+        margin-bottom: 3rem;
+        padding: 0 1.25rem;
     }
 
     .bbk-search-box {
         flex-direction: column;
+        border-radius: 20px;
+        padding: 1rem;
+        gap: 0.75rem;
     }
 
     .bbk-search-box input {
         width: 100%;
-        text-align: center;
+        text-align: left;
+        padding: 1rem 1.25rem;
+        font-size: 16px;
+        border-radius: 12px;
+        background: #f8f9fa;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        box-shadow: none;
+    }
+
+    .bbk-search-box input:focus {
+        background: white;
+        border-color: #5eb3f6;
+        box-shadow: 0 0 0 3px rgba(94, 179, 246, 0.1);
     }
 
     .bbk-search-box button {
         width: 100%;
-        border-radius: 25px;
+        border-radius: 12px;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        margin: 0;
+        box-shadow: 0 4px 12px rgba(249, 168, 38, 0.3);
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .bbk-search-box button:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(249, 168, 38, 0.4);
+    }
+
+    .bbk-cards-section {
+        padding: 0 1rem 3rem;
     }
 
     .bbk-cards-container {
@@ -726,9 +1187,28 @@ body {
         gap: 1.5rem;
     }
 
+    .bbk-card {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .bbk-card-icon {
+        height: 140px;
+        font-size: 3.5rem;
+    }
+
     .bbk-team-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+        padding: 0 1rem;
+    }
+
+    .bbk-footer {
+        padding: 2rem 0 1rem;
+    }
+
+    .bbk-footer-brand {
+        font-size: 1.5rem;
     }
 
     .bbk-footer-links {
@@ -736,24 +1216,414 @@ body {
         gap: 1rem;
     }
 
+    /* Navbar mobile improvements */
+    .bbk-navbar .navbar-collapse {
+        background: rgba(94, 179, 246, 0.95);
+        padding: 1rem;
+        border-radius: 15px;
+        margin-top: 1rem;
+    }
+
     .bbk-navbar .nav-link {
         margin: 0.5rem 0;
+        text-align: center;
+        display: block;
+        padding: 0.75rem 1rem !important;
+    }
+
+    .bbk-navbar .btn-login {
+        width: 100%;
+        margin-top: 0.5rem;
+        text-align: center;
+        display: block;
+    }
+
+    /* Result section responsive */
+    .bbk-result-container {
+        margin: 1rem auto;
+    }
+
+    .bbk-result-header {
+        padding: 1.5rem;
+    }
+
+    .bbk-result-header h3 {
+        font-size: 1.3rem;
+    }
+
+    .bbk-result-header h4 {
+        font-size: 1.2rem;
+    }
+
+    .bbk-result-body {
+        padding: 1.5rem;
+    }
+
+    .bbk-result-body h5 {
+        font-size: 1.1rem;
+    }
+
+    /* Make action buttons stack on mobile */
+    .bbk-action-buttons-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .bbk-action-buttons-group {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.75rem;
+    }
+
+    .bbk-back-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .bbk-action-buttons-group .btn-login {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Multiple results section buttons */
+    #multipleResultsSection .bbk-back-button {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    #multipleResultsTable .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #multipleResultsTable td {
+        vertical-align: middle;
+    }
+
+    /* Table responsive improvements */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1.5rem;
+        padding: 0 1.5rem;
+    }
+
+    .bbk-table {
+        min-width: 600px;
+        font-size: 0.85rem;
+    }
+
+    .bbk-table th,
+    .bbk-table td {
+        padding: 0.7rem 0.5rem;
+        white-space: nowrap;
+    }
+
+    /* Student info grid */
+    .bbk-result-header .row {
+        font-size: 0.9rem;
+    }
+
+    .bbk-result-header .row .col-md-3,
+    .bbk-result-header .row .col-md-2,
+    .bbk-result-header .row .col-6 {
+        margin-bottom: 1rem;
+    }
+
+    /* Summary cards */
+    #summaryCards .row {
+        margin-top: 1rem !important;
+    }
+
+    #summaryCards .card {
+        margin-bottom: 1rem;
     }
 }
 
+/* Mobile portrait (max-width: 576px) */
 @media (max-width: 576px) {
+    .bbk-hero {
+        padding: 2rem 0 1.5rem;
+    }
+
     .bbk-hero h1 {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
+        letter-spacing: -0.5px;
+    }
+
+    .bbk-hero p {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .bbk-search-container {
+        padding: 0 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .bbk-search-box {
+        padding: 0.875rem;
+        gap: 0.625rem;
+        border-radius: 16px;
+    }
+
+    .bbk-search-box input {
+        padding: 0.875rem 1rem;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .bbk-search-box button {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.95rem;
+        border-radius: 10px;
+    }
+
+    .bbk-cards-section {
+        padding: 0 0.8rem 2rem;
+    }
+
+    .bbk-card {
+        border-radius: 16px;
     }
 
     .bbk-card-icon {
-        height: 150px;
-        font-size: 3.5rem;
+        height: 120px;
+        font-size: 3rem;
+    }
+
+    .bbk-card-body {
+        padding: 1.2rem;
+    }
+
+    .bbk-card-title {
+        font-size: 1.1rem;
+    }
+
+    .bbk-card-text {
+        font-size: 0.9rem;
+    }
+
+    .bbk-card-footer {
+        padding: 0 1.2rem 1rem;
+        font-size: 0.8rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .bbk-features-title,
     .bbk-team-title {
         font-size: 1.8rem;
+    }
+
+    .bbk-footer {
+        padding: 1.5rem 0 1rem;
+    }
+
+    .bbk-footer-brand {
+        font-size: 1.3rem;
+    }
+
+    .bbk-footer-text {
+        font-size: 0.85rem;
+    }
+
+    .bbk-footer-bottom {
+        font-size: 0.8rem;
+    }
+
+    /* Result section mobile portrait */
+    .bbk-result-container {
+        padding: 0 0.5rem;
+    }
+
+    .bbk-result-card {
+        border-radius: 16px;
+    }
+
+    .bbk-result-header {
+        padding: 1.2rem;
+    }
+
+    .bbk-result-header h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .bbk-result-body {
+        padding: 1.2rem;
+    }
+
+    .bbk-result-body h5 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .bbk-back-button {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-login {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+
+    /* Table improvements for small screens */
+    .bbk-table {
+        min-width: 550px;
+        font-size: 0.8rem;
+    }
+
+    .bbk-table th,
+    .bbk-table td {
+        padding: 0.6rem 0.4rem;
+    }
+
+    /* Student info adjustments */
+    .bbk-result-header .row .col-md-6 {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Badge sizing */
+    .bbk-badge {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    /* Modal adjustments */
+    .bbk-modal-header {
+        padding: 1rem;
+    }
+
+    .bbk-modal-body {
+        padding: 1rem;
+    }
+}
+
+/* Extra small devices (max-width: 400px) */
+@media (max-width: 400px) {
+    .bbk-hero h1 {
+        font-size: 1.4rem;
+    }
+
+    .bbk-hero p {
+        font-size: 0.9rem;
+    }
+
+    .bbk-navbar .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .bbk-search-container {
+        padding: 0 0.75rem;
+    }
+
+    .bbk-search-box {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .bbk-search-box input {
+        padding: 0.75rem 0.875rem;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+
+    .bbk-search-box button {
+        font-size: 0.9rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+    }
+
+    .bbk-card-icon {
+        height: 100px;
+        font-size: 2.5rem;
+    }
+
+    .bbk-card-title {
+        font-size: 1rem;
+    }
+
+    .bbk-card-text {
+        font-size: 0.85rem;
+    }
+
+    .bbk-table {
+        min-width: 500px;
+        font-size: 0.75rem;
+    }
+
+    .bbk-result-header h3 {
+        font-size: 1rem;
+    }
+}
+
+/* ================================================ */
+/* MOBILE TOUCH IMPROVEMENTS */
+/* ================================================ */
+/* Ensure all buttons have adequate touch targets (minimum 44x44px) */
+@media (max-width: 768px) {
+    button,
+    .btn,
+    a.btn {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Improve button text readability */
+    .btn-login,
+    .bbk-back-button {
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    /* Better spacing for clickable elements */
+    .bbk-table tbody tr {
+        cursor: pointer;
+    }
+
+    /* Improve form input touch targets */
+    input[type="text"],
+    input[type="search"],
+    select,
+    textarea {
+        min-height: 44px;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+
+    /* Better visibility for active/focus states */
+    button:active,
+    .btn:active {
+        transform: scale(0.98);
+        opacity: 0.9;
+    }
+
+    /* Improve navbar toggle button */
+    .navbar-toggler {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Better card touch feedback */
+    .bbk-card {
+        cursor: pointer;
+    }
+
+    .bbk-card:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
     }
 }
 
@@ -789,4 +1659,17 @@ body {
 .bbk-py-5 {
     padding-top: 3rem;
     padding-bottom: 3rem;
+}
+
+/* Fix flexbox button wrapper on mobile */
+@media (max-width: 768px) {
+    .d-flex.gap-2 {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        width: 100%;
+    }
+
+    .d-flex.gap-2 .btn {
+        width: 100% !important;
+    }
 }

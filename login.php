@@ -43,178 +43,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-attachment: fixed;
-            padding: 20px;
-        }
-        .login-container {
-            width: 100%;
-            max-width: 450px;
-        }
-        .login-card {
-            background: linear-gradient(145deg, #1e1e2e 0%, #2a2a40 100%);
-            border-radius: 20px;
-            box-shadow: 0 15px 50px rgba(138, 43, 226, 0.3), 0 5px 15px rgba(0, 0, 0, 0.4);
-            padding: 3rem 2.5rem;
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        .login-logo {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-        .login-logo i {
-            font-size: 4rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            display: inline-block;
-        }
-        .login-logo h4 {
-            color: #e8e8e8;
-            margin-top: 1rem;
-            font-weight: 600;
-        }
-        .login-logo p {
-            color: #9a9aa0;
-            font-size: 0.95rem;
-        }
-        .form-label {
-            color: #e8e8e8;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-        .form-control {
-            background: linear-gradient(145deg, #2a2a40, #1e1e2e);
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            color: #e8e8e8;
-            padding: 0.85rem 1.2rem;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        .form-control:focus {
-            background: linear-gradient(145deg, #2a2a40, #1e1e2e);
-            border-color: #667eea;
-            color: #ffffff;
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25), 0 0 20px rgba(102, 126, 234, 0.3);
-            transform: translateY(-2px);
-        }
-        .form-control::placeholder {
-            color: #9a9aa0;
-        }
-        .input-group-text {
-            background: linear-gradient(145deg, #2a2a40, #1e1e2e);
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            color: #667eea;
-            border-right: none;
-        }
-        .input-group .form-control {
-            border-left: none;
-        }
-        .btn-login {
-            padding: 0.85rem 1.2rem;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            font-size: 1.05rem;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        .btn-login:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6), 0 0 20px rgba(118, 75, 162, 0.4);
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-            color: white;
-        }
-        .alert {
-            background: linear-gradient(145deg, rgba(220, 53, 69, 0.15), rgba(220, 53, 69, 0.1));
-            border: 1px solid rgba(220, 53, 69, 0.3);
-            color: #ff6b6b;
-            border-radius: 10px;
-            padding: 1rem;
-        }
-        .back-link {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-        .back-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        .back-link a:hover {
-            color: #764ba2;
-            text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
-        }
-        .forgot-password {
-            text-align: center;
-            margin-top: 1rem;
-        }
-        .forgot-password a {
-            color: #9a9aa0;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-        .forgot-password a:hover {
-            color: #667eea;
-        }
-        .demo-credentials {
-            background: linear-gradient(145deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            border: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-        }
-        .demo-credentials h6 {
-            color: #667eea;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-        .demo-credentials p {
-            color: #c0c0c0;
-            font-size: 0.8rem;
-            margin: 0.25rem 0;
-            text-align: center;
-        }
-        .demo-credentials code {
-            color: #764ba2;
-            background: rgba(102, 126, 234, 0.1);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-        }
-        .new-account {
-            text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
-        }
-        .new-account p {
-            color: #9a9aa0;
-            font-size: 0.9rem;
-            margin: 0;
-        }
-        @media (max-width: 576px) {
-            .login-card {
-                padding: 2rem 1.5rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
     <div class="login-container">
@@ -226,7 +55,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <?php if($success): ?>
-            <div class="alert" role="alert" style="background: linear-gradient(145deg, rgba(40, 167, 69, 0.15), rgba(40, 167, 69, 0.1)); border-color: rgba(40, 167, 69, 0.3); color: #4ade80;">
+            <div class="alert alert-success" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i><?php echo htmlspecialchars($success); ?>
             </div>
             <?php endif; ?>
@@ -248,11 +77,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label">
                         <i class="bi bi-key-fill me-2"></i>Password
                     </label>
-                    <div class="input-group">
+                    <div class="password-wrapper">
                         <input type="password" class="form-control" name="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
-                        <span class="input-group-text" onclick="togglePassword()" style="cursor: pointer;">
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword()" aria-label="Toggle password visibility">
                             <i class="bi bi-eye-fill" id="toggleIcon"></i>
-                        </span>
+                        </button>
                     </div>
                 </div>
 
@@ -273,11 +102,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p><strong>Password:</strong> <code>admin123</code></p>
             </div>
 
-            <div class="new-account">
-                <p>
-                    <i class="bi bi-person-plus-fill me-2"></i>Need an account?
-                    <a href="#" onclick="showRegistrationMessage(event)" style="color: #667eea;">Contact Administrator</a>
-                </p>
+            <div class="new-teacher-section">
+                <p>Are you a new teacher?</p>
+                <button type="button" class="btn-new-teacher" onclick="showContactModal()">
+                    <i class="bi bi-person-plus-fill"></i>
+                    <span>Request Teacher Account</span>
+                </button>
             </div>
 
             <div class="back-link">
@@ -288,35 +118,30 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <!-- Contact Administrator Modal -->
+    <div class="modal-overlay" id="contactModal" onclick="closeModalOnOverlay(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="bi bi-envelope-heart-fill"></i>
+                <h5>Request Teacher Account</h5>
+                <p>Contact the administrator to get started</p>
+            </div>
+            <div class="modal-body">
+                <div class="contact-info">
+                    <p><strong><i class="bi bi-envelope-fill me-2"></i>Email:</strong></p>
+                    <p><a href="mailto:admin@srms.edu">admin@srms.edu</a></p>
+                    <p style="margin-top: 1rem;"><strong><i class="bi bi-info-circle-fill me-2"></i>Instructions:</strong></p>
+                    <p style="font-size: 0.9rem; color: #64748b;">Send an email to the administrator with your details (Name, Department, Contact) to request a teacher account.</p>
+                </div>
+            </div>
+            <button class="modal-close-btn" onclick="closeContactModal()">
+                <i class="bi bi-check-circle-fill me-2"></i>Got it!
+            </button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.classList.remove('bi-eye-fill');
-                toggleIcon.classList.add('bi-eye-slash-fill');
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.classList.remove('bi-eye-slash-fill');
-                toggleIcon.classList.add('bi-eye-fill');
-            }
-        }
-
-        function showForgotPasswordMessage(event) {
-            event.preventDefault();
-            alert('Please contact the administrator at admin@srms.edu to reset your password.');
-        }
-
-        function showRegistrationMessage(event) {
-            event.preventDefault();
-            alert('Please contact the administrator at admin@srms.edu to request a new account.');
-        }
-
-        // Auto-focus email input on page load
-        document.getElementById('email').focus();
-    </script>
+    <!-- Custom JS -->
+    <script src="js/login.js"></script>
 </body>
 </html>

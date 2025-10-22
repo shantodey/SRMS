@@ -17,9 +17,13 @@ if (!isLoggedIn()) {
 // Fetch statistics for dashboard
 $stats = [
     'total_students' => 0,
-    'published_results' => 0,
+    'students_with_results' => 0,
     'total_departments' => 0,
-    'active_notices' => 0
+    'active_notices' => 0,
+    'recent_results' => [],
+    'grade_distribution' => [],
+    'average_percentage' => 0,
+    'pass_rate' => 0
 ];
 
 try {
@@ -27,9 +31,9 @@ try {
     $result = $conn->query("SELECT COUNT(*) as count FROM students");
     $stats['total_students'] = $result->fetch_assoc()['count'];
 
-    // Get published results count
+    // Get students with results
     $result = $conn->query("SELECT COUNT(DISTINCT student_id) as count FROM results");
-    $stats['published_results'] = $result->fetch_assoc()['count'];
+    $stats['students_with_results'] = $result->fetch_assoc()['count'];
 
     // Get total departments
     $result = $conn->query("SELECT COUNT(*) as count FROM departments");
@@ -38,6 +42,74 @@ try {
     // Get active notices
     $result = $conn->query("SELECT COUNT(*) as count FROM notices WHERE status = 'published'");
     $stats['active_notices'] = $result->fetch_assoc()['count'];
+
+    // Get recent results (last 5 students with results)
+    $result = $conn->query("
+        SELECT
+            s.student_name,
+            s.index_no,
+            d.code as department_code,
+            s.semester,
+            SUM(r.marks_obtained) as total_marks,
+            SUM(r.total_marks) as total_possible,
+            ROUND((SUM(r.marks_obtained) / SUM(r.total_marks)) * 100, 2) as percentage,
+            MAX(r.created_at) as result_date
+        FROM results r
+        INNER JOIN students s ON r.student_id = s.id
+        LEFT JOIN departments d ON s.department_id = d.id
+        GROUP BY r.student_id, s.semester
+        ORDER BY MAX(r.created_at) DESC
+        LIMIT 5
+    ");
+    while ($row = $result->fetch_assoc()) {
+        $stats['recent_results'][] = $row;
+    }
+
+    // Get grade distribution and statistics
+    $result = $conn->query("
+        SELECT
+            SUM(r.marks_obtained) as total_marks,
+            SUM(r.total_marks) as total_possible,
+            s.id as student_id,
+            s.semester
+        FROM results r
+        INNER JOIN students s ON r.student_id = s.id
+        GROUP BY r.student_id, s.semester
+    ");
+
+    $grade_dist = ['A+' => 0, 'A' => 0, 'A-' => 0, 'B+' => 0, 'B' => 0, 'B-' => 0, 'C+' => 0, 'C' => 0, 'C-' => 0, 'D' => 0, 'F' => 0];
+    $total_students_graded = 0;
+    $total_percentage = 0;
+    $passing_count = 0;
+
+    while ($row = $result->fetch_assoc()) {
+        if ($row['total_possible'] > 0) {
+            $percentage = ($row['total_marks'] / $row['total_possible']) * 100;
+            $total_percentage += $percentage;
+            $total_students_graded++;
+
+            // Determine grade
+            if ($percentage >= 80) $grade = 'A+';
+            elseif ($percentage >= 75) $grade = 'A';
+            elseif ($percentage >= 70) $grade = 'A-';
+            elseif ($percentage >= 65) $grade = 'B+';
+            elseif ($percentage >= 60) $grade = 'B';
+            elseif ($percentage >= 55) $grade = 'B-';
+            elseif ($percentage >= 50) $grade = 'C+';
+            elseif ($percentage >= 45) $grade = 'C';
+            elseif ($percentage >= 40) $grade = 'C-';
+            elseif ($percentage >= 33) $grade = 'D';
+            else $grade = 'F';
+
+            $grade_dist[$grade]++;
+            if ($grade !== 'F') $passing_count++;
+        }
+    }
+
+    $stats['grade_distribution'] = $grade_dist;
+    $stats['average_percentage'] = $total_students_graded > 0 ? round($total_percentage / $total_students_graded, 2) : 0;
+    $stats['pass_rate'] = $total_students_graded > 0 ? round(($passing_count / $total_students_graded) * 100, 2) : 0;
+
 } catch (Exception $e) {
     // Handle error silently for now
 }
@@ -115,8 +187,8 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-brand">
-            <i class="bi bi-box"></i>
-            <h4>Promage</h4>
+            <i class="bi bi-mortarboard-fill"></i>
+            <h4>SRMS</h4>
         </div>
 
         <div style="padding: 0 15px 30px;">
@@ -222,53 +294,55 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
         <!-- Dashboard Section -->
         <div id="dashboard" class="page-section active">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 style="font-weight: 700; color: #0A0A0A; margin: 0;">Overview</h3>
-                <select class="form-select" style="width: auto; border-radius: 8px; border: 1px solid #d1d5db; padding: 8px 40px 8px 12px; font-size: 0.9rem;">
-                    <option>Last 30 days</option>
-                    <option>Last 7 days</option>
-                    <option>Last 90 days</option>
-                    <option>This year</option>
-                </select>
+                <h3 style="font-weight: 700; color: #0A0A0A; margin: 0;">Academic Overview</h3>
+                <small class="text-muted">Real-time statistics from your database</small>
             </div>
             <div class="row g-3 mb-5">
                 <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #E8D5F2; color: #8B5CF6;">
-                            <i class="bi bi-graph-up"></i>
+                            <i class="bi bi-people-fill"></i>
                         </div>
-                        <p>Total revenue</p>
-                        <h3 id="totalStudents">$<?php echo number_format($stats['total_students'] * 1000, 0); ?></h3>
-                        <small class="text-muted">12% increase from last month</small>
+                        <p>Total Students</p>
+                        <h3 id="totalStudents"><?php echo $stats['total_students']; ?></h3>
+                        <small class="text-muted">Enrolled in all departments</small>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #FFE0D5; color: #FF6B35;">
-                            <i class="bi bi-briefcase"></i>
+                            <i class="bi bi-file-earmark-check-fill"></i>
                         </div>
-                        <p>Projects</p>
-                        <h3><?php echo $stats['published_results']; ?> <small>/100</small></h3>
-                        <small class="text-muted">10% decrease from last month</small>
+                        <p>Students with Results</p>
+                        <h3><?php echo $stats['students_with_results']; ?> <small>/ <?php echo $stats['total_students']; ?></small></h3>
+                        <small class="text-muted">
+                            <?php
+                            $percentage = $stats['total_students'] > 0
+                                ? round(($stats['students_with_results'] / $stats['total_students']) * 100, 1)
+                                : 0;
+                            echo $percentage . '% have published results';
+                            ?>
+                        </small>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #D5E8FF; color: #3B82F6;">
-                            <i class="bi bi-clock"></i>
+                            <i class="bi bi-building"></i>
                         </div>
-                        <p>Time spent</p>
-                        <h3 id="totalDepartments"><?php echo $stats['total_departments'] * 100; ?> <small>/1300 Hrs</small></h3>
-                        <small class="text-muted">8% increase from last month</small>
+                        <p>Departments</p>
+                        <h3 id="totalDepartments"><?php echo $stats['total_departments']; ?></h3>
+                        <small class="text-muted">Active academic departments</small>
                     </div>
                 </div>
                 <div class="col-md-3 col-sm-6">
                     <div class="stat-card">
                         <div class="stat-icon" style="background: #FFF4D5; color: #F59E0B;">
-                            <i class="bi bi-people"></i>
+                            <i class="bi bi-megaphone-fill"></i>
                         </div>
-                        <p>Resources</p>
-                        <h3 id="activeNotices"><?php echo $stats['active_notices'] + 100; ?> <small>/120</small></h3>
-                        <small class="text-muted">2% increase from last month</small>
+                        <p>Active Notices</p>
+                        <h3 id="activeNotices"><?php echo $stats['active_notices']; ?></h3>
+                        <small class="text-muted">Published announcements</small>
                     </div>
                 </div>
             </div>
@@ -277,66 +351,53 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
                 <div class="col-lg-8">
                     <div class="content-card">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 style="margin: 0;">Project summary</h4>
-                            <div class="d-flex gap-2">
-                                <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
-                                    <option>Project</option>
-                                </select>
-                                <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
-                                    <option>Project manager</option>
-                                </select>
-                                <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
-                                    <option>Status</option>
-                                </select>
-                            </div>
+                            <h4 style="margin: 0;"><i class="bi bi-graph-up me-2"></i>Recent Results Summary</h4>
+                            <small class="text-muted">Last 5 students with results published</small>
                         </div>
                         <div class="data-table">
                             <table class="table mb-0" style="--bs-table-bg: #f2eae5;">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Project manager</th>
-                                        <th>Due date</th>
-                                        <th>Status</th>
-                                        <th>Progress</th>
+                                        <th>Student Name</th>
+                                        <th>Index No</th>
+                                        <th>Department</th>
+                                        <th>Semester</th>
+                                        <th>Total Marks</th>
+                                        <th>Percentage</th>
+                                        <th>Grade</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
-                                    // Fetch recent students as project examples
-                                    try {
-                                        $result = $conn->query("SELECT s.*, d.name as dept_name, d.code as dept_code FROM students s LEFT JOIN departments d ON s.department_id = d.id ORDER BY s.created_at DESC LIMIT 5");
-                                        $statuses = ['Completed', 'Delayed', 'At risk', 'Completed', 'On going'];
-                                        $managers = ['Om prakash sao', 'Nelisan mando', 'Tiruvelly priya', 'Matte hannery', 'Sukumar rao'];
-                                        $progress_values = [100, 50, 60, 100, 50];
-                                        $index = 0;
+                                    if (!empty($stats['recent_results'])) {
+                                        foreach ($stats['recent_results'] as $result) {
+                                            $percentage = $result['percentage'];
 
-                                        while ($row = $result->fetch_assoc()) {
-                                            $status = $statuses[$index % 5];
-                                            $badge_class = $status == 'Completed' ? 'success' : ($status == 'Delayed' ? 'warning' : ($status == 'At risk' ? 'danger' : 'info'));
-                                            $progress = $progress_values[$index % 5];
+                                            // Determine grade
+                                            if ($percentage >= 80) { $grade = 'A+'; $grade_class = 'success'; }
+                                            elseif ($percentage >= 75) { $grade = 'A'; $grade_class = 'success'; }
+                                            elseif ($percentage >= 70) { $grade = 'A-'; $grade_class = 'success'; }
+                                            elseif ($percentage >= 65) { $grade = 'B+'; $grade_class = 'info'; }
+                                            elseif ($percentage >= 60) { $grade = 'B'; $grade_class = 'info'; }
+                                            elseif ($percentage >= 55) { $grade = 'B-'; $grade_class = 'info'; }
+                                            elseif ($percentage >= 50) { $grade = 'C+'; $grade_class = 'warning'; }
+                                            elseif ($percentage >= 45) { $grade = 'C'; $grade_class = 'warning'; }
+                                            elseif ($percentage >= 40) { $grade = 'C-'; $grade_class = 'warning'; }
+                                            elseif ($percentage >= 33) { $grade = 'D'; $grade_class = 'secondary'; }
+                                            else { $grade = 'F'; $grade_class = 'danger'; }
+
                                             echo "<tr>";
-                                            echo "<td><strong>" . htmlspecialchars($row['student_name'] ?? 'Student Project') . "</strong></td>";
-                                            echo "<td>" . $managers[$index % 5] . "</td>";
-                                            echo "<td>" . date('M d, Y', strtotime($row['created_at'] ?? 'now') + (30 * 24 * 60 * 60)) . "</td>";
-                                            echo "<td><span class='badge bg-$badge_class'>$status</span></td>";
-                                            echo "<td>
-                                                <div style='display: flex; align-items: center; gap: 8px;'>
-                                                    <div style='flex: 1; height: 6px; background: #e5e7eb; border-radius: 10px; overflow: hidden;'>
-                                                        <div style='height: 100%; width: $progress%; background: " . ($progress == 100 ? '#10b981' : '#3b82f6') . "; border-radius: 10px;'></div>
-                                                    </div>
-                                                    <span style='font-size: 0.85rem; color: #64748b; min-width: 35px;'>$progress%</span>
-                                                </div>
-                                            </td>";
+                                            echo "<td><strong>" . htmlspecialchars($result['student_name']) . "</strong></td>";
+                                            echo "<td>" . htmlspecialchars($result['index_no']) . "</td>";
+                                            echo "<td>" . htmlspecialchars($result['department_code']) . "</td>";
+                                            echo "<td class='text-center'>" . $result['semester'] . "</td>";
+                                            echo "<td>" . $result['total_marks'] . " / " . $result['total_possible'] . "</td>";
+                                            echo "<td><strong>" . $percentage . "%</strong></td>";
+                                            echo "<td><span class='badge bg-$grade_class'>$grade</span></td>";
                                             echo "</tr>";
-                                            $index++;
                                         }
-
-                                        if ($index == 0) {
-                                            echo "<tr><td colspan='5' class='text-center text-muted'>No data available</td></tr>";
-                                        }
-                                    } catch (Exception $e) {
-                                        echo "<tr><td colspan='5' class='text-center text-muted'>Error loading data</td></tr>";
+                                    } else {
+                                        echo "<tr><td colspan='7' class='text-center text-muted py-4'>No results published yet. Import student results to see them here.</td></tr>";
                                     }
                                     ?>
                                 </tbody>
@@ -348,55 +409,63 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
                 <div class="col-lg-4">
                     <div class="content-card">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 style="margin: 0;">Overall Progress</h4>
-                            <select class="form-select form-select-sm" style="width: auto; font-size: 0.85rem;">
-                                <option>All</option>
-                            </select>
+                            <h4 style="margin: 0;"><i class="bi bi-bar-chart-fill me-2"></i>Result Analytics</h4>
                         </div>
 
-                        <!-- Circular Progress Gauge -->
+                        <!-- Pass Rate Circular Progress -->
                         <div style="text-align: center; margin: 30px 0;">
                             <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
+                                <?php
+                                $passRate = $stats['pass_rate'];
+                                $circumference = 534; // 2 * π * 85
+                                $offset = $circumference - ($passRate / 100) * $circumference;
+                                $color = $passRate >= 80 ? '#10b981' : ($passRate >= 60 ? '#f59e0b' : '#ef4444');
+                                ?>
                                 <svg width="200" height="200" style="transform: rotate(-90deg);">
                                     <!-- Background circle -->
                                     <circle cx="100" cy="100" r="85" fill="none" stroke="#f0f0f0" stroke-width="12"/>
-                                    <!-- Progress arc (72%) -->
+                                    <!-- Progress arc -->
                                     <circle cx="100" cy="100" r="85" fill="none" stroke-width="12"
-                                        stroke-dasharray="534" stroke-dashoffset="150"
-                                        style="stroke: url(#progressGradient); stroke-linecap: round;"/>
-                                    <defs>
-                                        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
-                                            <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:1" />
-                                            <stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
-                                        </linearGradient>
-                                    </defs>
+                                        stroke="<?php echo $color; ?>"
+                                        stroke-dasharray="<?php echo $circumference; ?>"
+                                        stroke-dashoffset="<?php echo $offset; ?>"
+                                        style="stroke-linecap: round; transition: stroke-dashoffset 0.5s;"/>
                                 </svg>
                                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                                    <div style="font-size: 2.5rem; font-weight: 700; color: #0A0A0A;">72%</div>
-                                    <div style="color: #94a3b8; font-size: 0.9rem;">Completed</div>
+                                    <div style="font-size: 2.5rem; font-weight: 700; color: #0A0A0A;"><?php echo $passRate; ?>%</div>
+                                    <div style="color: #94a3b8; font-size: 0.9rem;">Pass Rate</div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Stats Grid -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 1.8rem; font-weight: 700; color: #0A0A0A;"><?php echo $stats['published_results']; ?></div>
-                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Total projects</div>
+                        <!-- Average Performance -->
+                        <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 12px; margin-bottom: 20px;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;"><?php echo $stats['average_percentage']; ?>%</div>
+                            <div style="color: #64748b; font-size: 0.9rem; margin-top: 4px;">Average Percentage</div>
+                        </div>
+
+                        <!-- Grade Distribution -->
+                        <h5 style="font-size: 0.9rem; color: #64748b; margin-bottom: 15px;">Grade Distribution</h5>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                            <?php
+                            $grade_colors = [
+                                'A+' => '#10b981', 'A' => '#059669', 'A-' => '#34d399',
+                                'B+' => '#3b82f6', 'B' => '#2563eb', 'B-' => '#60a5fa',
+                                'C+' => '#f59e0b', 'C' => '#d97706', 'C-' => '#fbbf24',
+                                'D' => '#6b7280', 'F' => '#ef4444'
+                            ];
+                            $total_graded = array_sum($stats['grade_distribution']);
+                            foreach ($stats['grade_distribution'] as $grade => $count):
+                                if ($count > 0 || in_array($grade, ['A+', 'A', 'B+', 'F'])): // Show key grades even if zero
+                            ?>
+                            <div style="text-align: center; padding: 10px; background: <?php echo $grade_colors[$grade]; ?>15; border-radius: 8px; border: 1px solid <?php echo $grade_colors[$grade]; ?>30;">
+                                <div style="font-size: 1.3rem; font-weight: 700; color: <?php echo $grade_colors[$grade]; ?>;"><?php echo $count; ?></div>
+                                <div style="color: #64748b; font-size: 0.75rem; margin-top: 2px;"><?php echo $grade; ?> Grade</div>
                             </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">26</div>
-                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Completed</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 1.8rem; font-weight: 700; color: #f59e0b;">35</div>
-                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">Delayed</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 1.8rem; font-weight: 700; color: #ef4444;">35</div>
-                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 4px;">On going</div>
-                            </div>
+                            <?php
+                                endif;
+                            endforeach;
+                            ?>
                         </div>
                     </div>
                 </div>

@@ -88,39 +88,27 @@ $noticeIcons = ['bi-megaphone-fill', 'bi-bell-fill', 'bi-info-circle-fill', 'bi-
         </div>
     </section>
 
-    <!-- Notice Cards Section (3 Cards in BBK Style) -->
-    <section class="bbk-cards-section">
-        <div class="bbk-cards-container">
+    <!-- Notice Cards Section (Desktop) / Notice Buttons (Mobile) -->
+    <section class="bbk-cards-section" id="noticesSection">
+        <!-- Desktop View: Cards with Read More -->
+        <div class="bbk-cards-container bbk-notices-desktop">
+            <!-- Will be populated via JavaScript -->
+        </div>
+
+        <!-- Mobile View: Compact Buttons -->
+        <div class="bbk-notices-mobile">
+            <h3 class="bbk-notices-mobile-title">
+                <i class="bi bi-bell-fill me-2"></i>Latest Notices
+            </h3>
+            <div class="bbk-notices-button-group">
+                <!-- Will be populated via JavaScript -->
+            </div>
+        </div>
+
+        <!-- Fallback for no notices -->
+        <div class="bbk-notices-empty" style="display: none;">
             <?php if (count($notices) > 0): ?>
-                <?php foreach ($notices as $index => $notice): ?>
-                <div class="bbk-card">
-                    <div class="bbk-card-icon">
-                        <i class="bi <?php echo $noticeIcons[$index % count($noticeIcons)]; ?>"></i>
-                    </div>
-                    <div class="bbk-card-body">
-                        <h3 class="bbk-card-title"><?php echo htmlspecialchars($notice['title']); ?></h3>
-                        <p class="bbk-card-text">
-                            <?php
-                            if (!empty($notice['content'])) {
-                                echo htmlspecialchars(substr($notice['content'], 0, 120));
-                                if (strlen($notice['content']) > 120) echo '...';
-                            } else {
-                                echo 'Click to read more details about this notice.';
-                            }
-                            ?>
-                        </p>
-                    </div>
-                    <div class="bbk-card-footer">
-                        <div class="bbk-card-date">
-                            <i class="bi bi-calendar-event"></i>
-                            <span><?php echo date('M d, Y', strtotime($notice['publish_date'])); ?></span>
-                        </div>
-                        <div>
-                            <i class="bi bi-person"></i> Admin
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
+                <!-- Notices loaded via JS -->
             <?php else: ?>
                 <!-- Default placeholders if no notices -->
                 <div class="bbk-card">
@@ -189,6 +177,40 @@ $noticeIcons = ['bi-megaphone-fill', 'bi-bell-fill', 'bi-info-circle-fill', 'bi-
         </div>
     </section>
 
+    <!-- Notice Modal -->
+    <div id="noticeModal" class="bbk-notice-modal" role="dialog" aria-modal="true" aria-labelledby="noticeModalTitle" aria-describedby="noticeModalContent" style="display: none;">
+        <div class="bbk-notice-modal-overlay" onclick="closeNoticeModal()"></div>
+        <div class="bbk-notice-modal-container">
+            <div class="bbk-notice-modal-header">
+                <h2 id="noticeModalTitle" class="bbk-notice-modal-title"></h2>
+                <button type="button" class="bbk-notice-modal-close" onclick="closeNoticeModal()" aria-label="Close notice">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="bbk-notice-modal-body">
+                <div class="bbk-notice-modal-meta">
+                    <div class="bbk-notice-modal-publisher">
+                        <i class="bi bi-person-fill"></i>
+                        <span id="noticeModalPublisher"></span>
+                    </div>
+                    <div class="bbk-notice-modal-date">
+                        <i class="bi bi-calendar-event"></i>
+                        <span id="noticeModalDate"></span>
+                    </div>
+                </div>
+                <div id="noticeModalContent" class="bbk-notice-modal-content"></div>
+            </div>
+            <div class="bbk-notice-modal-footer">
+                <button type="button" class="btn btn-login" onclick="printNotice()">
+                    <i class="bi bi-printer me-2"></i>Print
+                </button>
+                <button type="button" class="btn btn-login" onclick="copyNoticeContent()">
+                    <i class="bi bi-clipboard me-2"></i>Copy
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Multiple Results Selection Section (Hidden Initially) -->
     <div id="multipleResultsSection" style="display: none;">
         <div class="bbk-result-container">
@@ -228,11 +250,11 @@ $noticeIcons = ['bi-megaphone-fill', 'bi-bell-fill', 'bi-info-circle-fill', 'bi-
     <!-- Result Section (Hidden Initially) -->
     <div id="resultSection" style="display: none;">
         <div class="bbk-result-container">
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div class="bbk-action-buttons-wrapper mb-3">
                 <button class="bbk-back-button" onclick="hideResult()">
                     <i class="bi bi-arrow-left"></i>Back to Search
                 </button>
-                <div class="d-flex gap-2">
+                <div class="bbk-action-buttons-group">
                     <button class="btn btn-login" onclick="printResult()">
                         <i class="bi bi-printer me-2"></i>Print
                     </button>
@@ -302,6 +324,7 @@ $noticeIcons = ['bi-megaphone-fill', 'bi-bell-fill', 'bi-info-circle-fill', 'bi-
 
     <!-- Custom JS -->
     <script src="js/bbk-custom.js"></script>
+    <script src="js/notices.js"></script>
 
     <?php if (isset($_GET['logout']) && $_GET['logout'] == '1'): ?>
     <script>

@@ -35,7 +35,7 @@ $teamMembers = [
         'name' => 'Saima Sattar',
         'role' => 'Quality Assurance',
         'contribution' => 'Conducted comprehensive testing, bug fixes, and ensured system reliability and performance.',
-        'image' => '', // Add image path later
+        'image' => 'assets/saima.jpg', // Add image path later
         'initials' => 'TM5'
     ],
     [
