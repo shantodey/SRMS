@@ -1,0 +1,55 @@
+/* ================================================ */
+/* TEACHER PROFILE PHOTOS IN TABLE */
+/* ================================================ */
+.teacher-profile-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.teacher-profile-img:hover {
+    transform: scale(1.1);
+    border-color: #FF6B35;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.teacher-avatar-placeholder {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF6B35, #f59e0b);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.teacher-avatar-placeholder:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.password-hash {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: help;
+    transition: all 0.2s;
+    display: inline-block;
+}
+
+.password-hash:hover {
+    background: #e2e8f0;
+    color: #475569;
+}

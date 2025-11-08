@@ -1,0 +1,644 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+a{
+    text-decoration: none;
+}
+.bbk-cards-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem 4rem;
+}
+
+.bbk-cards-container,
+.bbk-all-notices-grid,
+.bbk-features-container,
+.bbk-subjects-grid,
+.bbk-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.bbk-card,
+.bbk-notice-card-modal,
+.bbk-feature-card,
+.bbk-subject-card,
+.bbk-summary-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.4s ease;
+    animation: cardFloat 3s ease-in-out infinite;
+}
+
+.bbk-card:nth-child(1),
+.bbk-notice-card-modal:nth-child(3n+1),
+.bbk-feature-card:nth-child(3n+1),
+.bbk-subject-card:nth-child(3n+1),
+.bbk-summary-card:nth-child(3n+1) { animation-delay: 0s; }
+
+.bbk-card:nth-child(2),
+.bbk-notice-card-modal:nth-child(3n+2),
+.bbk-feature-card:nth-child(3n+2),
+.bbk-subject-card:nth-child(3n+2),
+.bbk-summary-card:nth-child(3n+2) { animation-delay: 0.5s; }
+
+.bbk-card:nth-child(3),
+.bbk-notice-card-modal:nth-child(3n+3),
+.bbk-feature-card:nth-child(3n+3),
+.bbk-subject-card:nth-child(3n+3),
+.bbk-summary-card:nth-child(3n+3) { animation-delay: 1s; }
+
+@keyframes cardFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.bbk-card:hover,
+.bbk-notice-card-modal:hover,
+.bbk-feature-card:hover,
+.bbk-subject-card:hover,
+.bbk-summary-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    animation-play-state: paused;
+}
+
+.bbk-card-icon,
+.bbk-notice-card-modal-icon,
+.bbk-feature-icon,
+.bbk-subject-icon,
+.bbk-summary-icon {
+    width: 100%;
+    height: 150px;
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.bbk-card-icon i,
+.bbk-notice-card-modal-icon i,
+.bbk-feature-icon i,
+.bbk-subject-icon i,
+.bbk-summary-icon i {
+    position: relative;
+    z-index: 1;
+    animation: iconBounce 2s ease-in-out infinite;
+}
+
+@keyframes iconBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.bbk-card-body,
+.bbk-notice-card-modal-body,
+.bbk-feature-card > div:not(.bbk-feature-icon),
+.bbk-subject-card-body,
+.bbk-summary-card-body {
+    padding: 1.5rem;
+}
+
+.bbk-card-title,
+.bbk-notice-card-modal-title,
+.bbk-feature-card h4,
+.bbk-subject-card-title,
+.bbk-summary-card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+}
+
+.bbk-card-text,
+.bbk-notice-card-modal-excerpt,
+.bbk-feature-card p,
+.bbk-subject-card-text,
+.bbk-summary-card-text {
+    font-size: 0.95rem;
+    color: #7f8c8d;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.bbk-card-footer,
+.bbk-notice-card-modal-footer,
+.bbk-subject-card-footer,
+.bbk-summary-card-footer {
+    padding: 0 1.8rem 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #95a5a6;
+    font-size: 0.85rem;
+}
+
+.bbk-card-date,
+.bbk-notice-card-modal-date,
+.bbk-subject-card-date,
+.bbk-summary-card-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bbk-card-date i,
+.bbk-notice-card-modal-date i,
+.bbk-subject-card-date i,
+.bbk-summary-card-date i {
+    color: #5eb3f6;
+}
+
+/* Mobile Notices View (Will be hidden on mobile now) */
+.bbk-notices-mobile {
+    display: none;
+}
+
+.bbk-notices-mobile-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.bbk-notices-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.bbk-notice-button {
+    background: white;
+    border: none;
+    border-radius: 15px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: left;
+    min-height: 70px;
+    width: 100%;
+    position: relative; /* Needed for absolute arrow positioning */
+}
+
+.bbk-notice-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.bbk-notice-button-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.bbk-notice-button-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.bbk-notice-button-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bbk-notice-button-date {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* View All Button */
+.bbk-view-all-container {
+    max-width: 1200px;
+    margin: 2rem auto 3rem;
+    padding: 0 1rem;
+}
+
+.bbk-view-all-notices-btn {
+    width: 100%;
+    background: white;
+    border: none;
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.4s ease;
+}
+
+.bbk-view-all-notices-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(94, 179, 246, 0.2);
+}
+
+.bbk-view-all-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.bbk-view-all-notices-btn:hover .bbk-view-all-icon {
+    transform: rotate(90deg) scale(1.1);
+}
+
+.bbk-view-all-content {
+    flex: 1;
+    text-align: left;
+}
+
+.bbk-view-all-title {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.3rem;
+}
+
+.bbk-view-all-subtitle {
+    display: block;
+    font-size: 0.95rem;
+    color: #7f8c8d;
+}
+
+.bbk-view-all-arrow {
+    font-size: 2rem;
+    color: #5eb3f6;
+    transition: transform 0.3s ease;
+}
+
+.bbk-view-all-notices-btn:hover .bbk-view-all-arrow {
+    transform: translateX(10px);
+}
+
+/* All Notices Modal */
+.bbk-all-notices-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.bbk-all-notices-container {
+    background: white;
+    border-radius: 20px;
+    max-width: 1200px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.bbk-all-notices-header {
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bbk-all-notices-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.bbk-all-notices-body {
+    padding: 2rem;
+    overflow-y: auto;
+    background-color: #8da8bf;
+    flex: 1;
+}
+
+/* ================================================ */
+/* RESPONSIVE STYLES - All Card Types */
+/* ================================================ */
+
+/* Tablet and below (max-width: 992px) */
+@media (max-width: 992px) {
+    .bbk-cards-container,
+    .bbk-all-notices-grid,
+    .bbk-features-container,
+    .bbk-subjects-grid,
+    .bbk-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+/* Mobile Landscape and below (max-width: 768px) - MODIFIED FOR LIST STYLE */
+@media (max-width: 768px) {
+    
+    .bbk-notices-mobile {
+        /* Hide the separate mobile list design */
+        display: none;
+    }
+    
+    /* Ensure main and feature card grids switch to a single column (Grid method) */
+    .bbk-cards-container,
+    .bbk-features-container,
+    .bbk-subjects-grid,
+    .bbk-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    /* Apply the bbk-notices-button-group stacking (Flex method) to the modal grid */
+    .bbk-all-notices-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.875rem; /* Using the button group's gap */
+    }
+    
+    /* Restyle the modal card to look like a button */
+    .bbk-notice-card-modal {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        animation: none; /* Disable floating */
+        transform: none;
+        transition: all 0.3s ease;
+        position: relative; /* For the new arrow */
+        cursor: pointer;
+    }
+
+    .bbk-notice-card-modal:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        animation-play-state: paused;
+    }
+    
+    /* Redefine icon and body structure to match the button layout */
+    .bbk-notice-card-modal-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .bbk-notice-card-modal-body {
+        padding: 0; /* Remove existing padding */
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .bbk-notice-card-modal-title {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* HIDE unwanted elements: Excerpt (text) and Read More/Author line */
+    .bbk-notice-card-modal-excerpt,
+    .bbk-notice-card-modal-footer > a { /* Assuming the Read More link is a child <a> of the footer */
+        display: none;
+    }
+    
+    /* Hide the author part (assuming the author is the second element in the footer or wrapped in a specific tag) */
+    .bbk-notice-card-modal-footer [class*='author'] { 
+        display: none; 
+    }
+    
+    /* Repurpose the footer/date area to match the button's date style */
+    .bbk-notice-card-modal-footer {
+        padding: 0;
+        display: block; /* Change from flex to block for simple mobile date */
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        /* Position the date correctly below the title */
+        position: relative;
+    }
+    
+    .bbk-notice-card-modal-date {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        /* Ensure the calendar icon stays */
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* NEW: Add the Chevron Arrow (>) to the list item */
+    .bbk-notice-card-modal::after {
+        content: '>'; /* Using a simple character, you can use a Font Awesome icon here too */
+        position: absolute;
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #5eb3f6; /* Blue color */
+        font-size: 1.2rem;
+        font-weight: 300;
+        opacity: 0.7;
+    }
+    
+    /* Modal adjustments for mobile */
+    .bbk-all-notices-modal {
+        padding: 0;
+        align-items: flex-end;
+    }
+    
+    .bbk-all-notices-container {
+        max-height: 95vh;
+        border-radius: 20px 20px 0 0;
+    }
+    
+    .bbk-all-notices-header {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .bbk-all-notices-body {
+        padding: 1.25rem 1rem;
+    }
+    
+    /* View All Button mobile adjustments */
+    .bbk-view-all-notices-btn {
+        padding: 1.25rem 1.5rem;
+        gap: 1rem;
+    }
+    
+    .bbk-view-all-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .bbk-view-all-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Mobile Portrait (max-width: 576px) */
+@media (max-width: 576px) {
+    .bbk-notices-button-group {
+        gap: 0.75rem;
+    }
+    
+    .bbk-notice-button {
+        padding: 0.875rem 1rem;
+        min-height: 65px;
+    }
+    
+    .bbk-notice-button-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.3rem;
+    }
+    
+    .bbk-notice-button-title {
+        font-size: 0.95rem;
+    }
+    
+    .bbk-notice-button-date {
+        font-size: 0.8rem;
+    }
+    
+    /* Apply button-group's smaller gap to the modal grid */
+    .bbk-all-notices-grid {
+        gap: 0.75rem;
+    }
+    
+    /* Adjust modal button sizes to match standard button */
+    .bbk-notice-card-modal {
+        padding: 0.875rem 1rem;
+        gap: 0.75rem;
+    }
+    
+    .bbk-notice-card-modal-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.3rem;
+    }
+    
+    .bbk-notice-card-modal-title {
+        font-size: 0.95rem;
+    }
+
+    .bbk-notice-card-modal-date {
+        font-size: 0.8rem;
+    }
+     .bbk-card-read-more{
+        display: none;
+    }
+    /* Adjust card padding for mobile (unrelated, but kept for non-modal cards) */
+    .bbk-card-body,
+    .bbk-feature-card > div:not(.bbk-feature-icon),
+    .bbk-subject-card-body,
+    .bbk-summary-card-body {
+        padding: 1.25rem;
+    }
+    
+    .bbk-view-all-notices-btn {
+        padding: 1rem 1.25rem;
+    }
+    
+    .bbk-view-all-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+    
+    .bbk-all-notices-body {
+        padding: 1rem 0.75rem;
+    }
+    
+    /* NEW: Adjust arrow position for smaller padding */
+    .bbk-notice-card-modal::after {
+        right: 1rem;
+    }
+}
+
+/* Extra small devices (max-width: 400px) */
+@media (max-width: 400px) {
+    .bbk-notice-button {
+        padding: 0.75rem 0.875rem;
+        min-height: 60px;
+    }
+    
+    .bbk-notice-button-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+    }
+    
+    .bbk-notice-button-title {
+        font-size: 0.9rem;
+    }
+    
+    .bbk-notices-mobile-title {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    .bbk-card-read-more{
+        display: none;
+    }
+    /* Further reduce card padding for very small screens */
+    .bbk-card-body,
+    .bbk-feature-card > div:not(.bbk-feature-icon),
+    .bbk-subject-card-body,
+    .bbk-summary-card-body {
+        padding: 1rem;
+    }
+}

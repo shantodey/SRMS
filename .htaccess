@@ -1,0 +1,55 @@
+# InfinityFree Optimized .htaccess
+
+# Enable error reporting (for debugging)
+php_flag display_errors On
+php_value error_reporting E_ALL
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Enable PHP session handling
+php_value session.auto_start 0
+php_value session.use_cookies 1
+php_value session.use_only_cookies 1
+
+# Increase limits
+php_value max_execution_time 300
+php_value max_input_time 300
+php_value memory_limit 128M
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+
+# Prevent directory listing
+Options -Indexes
+
+# Custom error pages (optional)
+ErrorDocument 404 /index.php
+ErrorDocument 500 "An error occurred. Please contact admin."
+
+# Rewrite rules for clean URLs (if needed)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Redirect HTTP to HTTPS (optional)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<Files "config/database.php">
+    Order allow,deny
+    Deny from all
+</Files>

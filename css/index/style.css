@@ -1,0 +1,748 @@
+/* ================================================ */
+/* BBK-STYLE THEME - Sky Blue Gradient Design */
+/* ================================================ */
+
+/* Color Palette from BBK Image:
+   - Sky Blue: #5eb3f6, #6bb7f7, #87c5f9
+   - Light Blue: #a8d8fc, #c8e8fd
+   - White: #ffffff
+   - Text Dark: #2c3e50, #34495e
+   - Orange Accent: #f9a826, #fbb034
+   - Card Shadow: rgba(0,0,0,0.08)
+*/
+
+/* ================================================ */
+/* BASE STYLES */
+/* ================================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(180deg, #5eb3f6 0%, #87c5f9 40%, #c8e8fd 100%);
+    min-height: 100vh;
+    color: #2c3e50;
+    background-attachment: fixed;
+    overflow-x: hidden;
+}
+
+/* ================================================ */
+/* NAVBAR - BBK Style */
+/* ================================================ */
+.bbk-navbar {
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border: none;
+}
+
+.bbk-navbar .navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white !important;
+    letter-spacing: -0.5px;
+}
+
+.bbk-navbar .navbar-toggler {
+    border: 2px solid white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+}
+
+.bbk-navbar .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+}
+
+.bbk-navbar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.bbk-navbar .nav-link {
+    color: white !important;
+    font-weight: 500;
+    font-size: 1rem;
+    margin: 0 1rem;
+    padding: 0.5rem 1rem !important;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.bbk-navbar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white !important;
+}
+
+.bbk-navbar .btn-login {
+    background: #f9a826;
+    color: white !important;
+    border: none;
+    padding: 0.6rem 1.8rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(249, 168, 38, 0.3);
+    display: inline-block;
+}
+
+.bbk-navbar .btn-login:hover {
+    background: #e89615;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(249, 168, 38, 0.4);
+}
+
+/* ================================================ */
+/* HERO SECTION - Welcome Banner */
+/* ================================================ */
+.bbk-hero {
+    text-align: center;
+    padding: 4rem 0 3rem;
+    color: white;
+}
+
+.bbk-hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: white !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    letter-spacing: -1px;
+}
+
+.bbk-hero p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.95) !important;
+    margin-bottom: 2.5rem;
+    font-weight: 400;
+}
+
+/* ================================================ */
+/* SEARCH BAR - BBK Style */
+/* ================================================ */
+.bbk-search-container {
+    max-width: 700px;
+    margin: 0 auto 4rem;
+    padding: 0 1rem;
+}
+
+.bbk-search-box {
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.bbk-search-box:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.bbk-search-box input {
+    flex: 1;
+    border: none;
+    padding: 1.2rem 2rem;
+    font-size: 1rem;
+    color: #2c3e50;
+    outline: none;
+    background: transparent;
+}
+
+.bbk-search-box input::placeholder {
+    color: #95a5a6;
+}
+
+.bbk-search-box button {
+    background: #f9a826;
+    color: white;
+    border: none;
+    padding: 1.2rem 2.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 50px;
+    margin: 4px;
+    white-space: nowrap;
+}
+
+.bbk-search-box button:hover {
+    background: #e89615;
+    transform: scale(1.02);
+}
+
+
+/* ================================================ */
+/* ABOUT US / TEAM SECTION */
+/* ================================================ */
+.bbk-team-section {
+    background: white;
+    padding: 5rem 0;
+}
+
+.bbk-team-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.bbk-team-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    margin-bottom: 4rem;
+}
+
+.bbk-team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.bbk-team-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.4s ease;
+    text-align: center;
+}
+
+.bbk-team-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+}
+
+.bbk-team-photo {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.bbk-team-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bbk-team-photo-placeholder {
+    font-weight: 700;
+    font-size: 3rem;
+}
+
+.bbk-team-info {
+    padding: 2rem;
+}
+
+.bbk-team-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.bbk-team-role {
+    font-size: 1rem;
+    color: #5eb3f6;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.bbk-team-contribution {
+    font-size: 0.95rem;
+    color: #7f8c8d;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.bbk-team-social {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.bbk-team-social a {
+    width: 40px;
+    height: 40px;
+    background: rgba(94, 179, 246, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5eb3f6;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.bbk-team-social a:hover {
+    background: #5eb3f6;
+    color: white;
+    transform: translateY(-3px);
+}
+
+/* ================================================ */
+/* FOOTER - BBK Style */
+/* ================================================ */
+.bbk-footer {
+    background: white;
+    color: #2c3e50;
+    padding: 3rem 0 1.5rem;
+    margin-top: 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.bbk-footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.bbk-footer-brand {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #5eb3f6;
+    margin-bottom: 1rem;
+}
+
+.bbk-footer-text {
+    color: #7f8c8d;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+
+
+.bbk-footer-bottom {
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(94, 179, 246, 0.2);
+    color: #95a5a6;
+    font-size: 0.9rem;
+}
+
+/* ================================================ */
+/* RESULT DISPLAY - 
+/* ================================================ */
+.bbk-result-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.bbk-result-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.bbk-result-header {
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    color: white;
+    padding: 2rem;
+}
+
+.bbk-result-header h3 {
+    color: white !important;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.bbk-result-body {
+    padding: 2rem;
+}
+
+.bbk-back-button {
+    background: white;
+    color: #5eb3f6;
+    border: 2px solid #5eb3f6;
+    padding: 0.7rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.bbk-back-button:hover {
+    background: #5eb3f6;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(94, 179, 246, 0.3);
+}
+
+/* Action buttons wrapper */
+.bbk-action-buttons-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.bbk-action-buttons-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.bbk-table {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.bbk-table thead {
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    color: white;
+}
+
+.bbk-table th {
+    padding: 1rem;
+    font-weight: 600;
+    text-align: left;
+    color: white !important;
+    border: none;
+}
+
+.bbk-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #ecf0f1;
+    color: #2c3e50 !important;
+}
+
+.bbk-table tbody tr:hover {
+    background: rgba(94, 179, 246, 0.05);
+}
+
+.bbk-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ================================================ */
+/* BADGES & GRADES - BBK Style */
+/* ================================================ */
+.bbk-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.bbk-badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.bbk-badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.bbk-badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.bbk-badge-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ================================================ */
+/* LOADING & MODALS - BBK Style */
+/* ================================================ */
+.bbk-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(94, 179, 246, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.bbk-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid white;
+    border-top-color: #f9a826;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.bbk-modal-content {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+.bbk-modal-header {
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    border: none;
+    padding: 1.5rem;
+}
+
+.bbk-modal-header h5 {
+    color: white !important;
+}
+
+.bbk-modal-body {
+    padding: 2rem;
+}
+
+/* ================================================ */
+/* NOTICE MODAL - Desktop & Mobile Styles */
+/* ================================================ */
+.bbk-notice-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.bbk-notice-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.bbk-notice-modal-container {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+.bbk-notice-modal-header {
+    background: linear-gradient(135deg, #5eb3f6, #87c5f9);
+    color: white;
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.bbk-notice-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white !important;
+    margin: 0;
+    line-height: 1.3;
+    flex: 1;
+}
+
+.bbk-notice-modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.bbk-notice-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.bbk-notice-modal-body {
+    padding: 1.75rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.bbk-notice-modal-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid #ecf0f1;
+    flex-wrap: wrap;
+}
+
+.bbk-notice-modal-publisher,
+.bbk-notice-modal-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #5a6c7d;
+}
+
+.bbk-notice-modal-publisher i,
+.bbk-notice-modal-date i {
+    color: #5eb3f6;
+    font-size: 1.1rem;
+}
+
+.bbk-notice-modal-content {
+    color: #2c3e50;
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+.bbk-notice-modal-content p {
+    margin-bottom: 1rem;
+}
+
+.bbk-notice-modal-content h1,
+.bbk-notice-modal-content h2,
+.bbk-notice-modal-content h3,
+.bbk-notice-modal-content h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #2c3e50;
+}
+
+.bbk-notice-modal-content ul,
+.bbk-notice-modal-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.bbk-notice-modal-content a {
+    color: #5eb3f6;
+    text-decoration: underline;
+}
+
+.bbk-notice-modal-footer {
+    padding: 1.25rem 1.75rem;
+    border-top: 2px solid #ecf0f1;
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.bbk-notice-modal-footer .btn {
+    flex: 1;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUpMobile {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+
+
+/* ================================================ */
+/* UTILITY CLASSES */
+/* ================================================ */
+.bbk-text-primary {
+    color: #5eb3f6 !important;
+}
+
+.bbk-text-muted {
+    color: #7f8c8d !important;
+}
+
+.bbk-bg-light {
+    background: #f8f9fa;
+}
+
+.bbk-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.bbk-mt-5 {
+    margin-top: 3rem;
+}
+
+.bbk-mb-5 {
+    margin-bottom: 3rem;
+}
+
+.bbk-py-5 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+
