@@ -1,0 +1,24 @@
+===============================================
+📢 IMPORTANT: NEW EXAM LAYER FEATURES AVAILABLE
+===============================================
+
+To enable the new exam management features:
+
+1. Login to admin panel
+2. Visit: http://localhost/SRMS/admin/install_exam_layer.php
+3. Click "Start Installation" button
+4. Wait for completion (2-5 minutes)
+
+That's it! No terminal commands needed.
+
+New Features After Installation:
+✅ Create Final, Midterm, Class Test exams
+✅ Upload results via Excel templates
+✅ Automatic validation and error checking
+✅ Students can browse by exam type
+✅ Class tests numbered automatically (CT-1, CT-2, CT-3...)
+
+Your existing data will be preserved and enhanced.
+A backup will be created automatically.
+
+Questions? See INSTALLATION_GUIDE.md

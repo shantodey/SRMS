@@ -96,12 +96,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </a>
             </div>
 
-            <div class="demo-credentials">
-                <h6><i class="bi bi-info-circle me-2"></i>Demo Credentials</h6>
-                <p><strong>Email:</strong> <code>admin@srms.edu</code></p>
-                <p><strong>Password:</strong> <code>admin123</code></p>
-            </div>
-
             <div class="new-teacher-section">
                 <p>Are you a new teacher?</p>
                 <button type="button" class="btn-new-teacher" onclick="showContactModal()">

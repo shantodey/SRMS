@@ -274,28 +274,58 @@ $noticeIcons = ['bi-megaphone-fill', 'bi-bell-fill', 'bi-info-circle-fill', 'bi-
                 </div>
 
                 <div class="bbk-result-body">
-                    <h5 class="mb-4"><i class="bi bi-table me-2"></i>Subject Results</h5>
-                    <div class="table-responsive">
-                        <table class="bbk-table">
-                            <thead>
-                                <tr>
-                                    <th>Subject Code</th>
-                                    <th>Subject Name</th>
-                                    <th class="text-center">Marks</th>
-                                    <th class="text-center">Total</th>
-                                    <th class="text-center">Percentage</th>
-                                    <th class="text-center">Grade</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resultTableBody">
-                                <!-- Will be populated dynamically -->
-                            </tbody>
-                        </table>
+                    <!-- Exam Type Tabs -->
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="bi bi-funnel me-2"></i>Filter by Exam Type</h5>
+                        <div class="btn-group w-100" role="group" id="examTypeTabs">
+                            <button type="button" class="btn btn-outline-primary active" onclick="switchExamType('Final')">
+                                <i class="bi bi-bookmark-fill me-2"></i>Final Exam
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="switchExamType('Midterm')">
+                                <i class="bi bi-bookmark-check-fill me-2"></i>Midterm
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="switchExamType('ClassTest')">
+                                <i class="bi bi-journal-check me-2"></i>Class Test
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="switchExamType('Assignment')">
+                                <i class="bi bi-file-earmark-text me-2"></i>Assignment
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Summary Cards -->
-                    <div class="row g-3 mt-3" id="summaryCards">
-                        <!-- Will be populated dynamically -->
+                    <!-- Subject Selection for Class Tests and Assignments (Hidden by default) -->
+                    <div id="classTestSubjects" style="display: none;">
+                        <h5 class="mb-3"><i class="bi bi-book me-2"></i>Select Subject</h5>
+                        <div class="row g-3 mb-4" id="subjectCards">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div id="resultsTableSection">
+                        <h5 class="mb-4"><i class="bi bi-table me-2"></i><span id="resultsTableTitle">Subject Results</span></h5>
+                        <div class="table-responsive">
+                            <table class="bbk-table">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Code</th>
+                                        <th>Subject Name</th>
+                                        <th class="text-center">Marks</th>
+                                        <th class="text-center">Total</th>
+                                        <th class="text-center">Percentage</th>
+                                        <th class="text-center">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultTableBody">
+                                    <!-- Will be populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="row g-3 mt-3" id="summaryCards">
+                            <!-- Will be populated dynamically -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -313,7 +343,7 @@ $noticeIcons = ['bi-megaphone-fill', 'bi-bell-fill', 'bi-info-circle-fill', 'bi-
                     Student Result Management System - Making education management easier
                 </p>
                 <div class="bbk-footer-bottom">
-                    &copy; <?php echo date('Y'); ?> SRMS - Student Result Management System. All rights reserved.
+                    &copy; <?php echo date('Y'); ?> SRMS - Student Result Management System. All rights reserved By Shanto Dey.
                 </div>
             </div>
         </div>

@@ -79,28 +79,8 @@ function addResult(formData) {
     });
 };
 
-// Modify your existing showSection function to load dynamic data
-function showSection(sectionId) {
-    // If it's dashboard, load statistics
-    if (sectionId === 'dashboard') {
-        loadDashboardStats();
-    }
-    
-    // If showing manage students section, load student list
-    if (sectionId === 'manageStudents') {
-        loadStudentList();
-    }
-    
-    // If showing manage results section, load results list
-    if (sectionId === 'importResults') {
-        loadResultsList();
-    }
-    
-    // If showing notices section, load notices
-    if (sectionId === 'manageNotices') {
-        loadNotices();
-    }
-}
+// Note: showSection function is defined in admin.php
+// This function here is kept for reference but not used
 
 // ================================================
 // STUDENT FILTERING AND LOADING
@@ -148,6 +128,8 @@ function loadBatches() {
 
 // Function to load student list with filters
 function loadStudentList() {
+    console.log('loadStudentList() called');
+
     // Get filter values
     const search = document.getElementById('studentSearch')?.value || '';
     const departmentId = document.getElementById('departmentFilter')?.value || '';
@@ -158,6 +140,8 @@ function loadStudentList() {
     if (search) params.append('search', search);
     if (departmentId) params.append('department', departmentId);
     if (batchId) params.append('batch', batchId);
+
+    console.log('Loading students with params:', params.toString());
 
     // Show loading state
     const tbody = document.getElementById('studentTableBody');
@@ -175,6 +159,7 @@ function loadStudentList() {
     fetch(`admin/get_students.php?${params.toString()}`)
     .then(response => response.json())
     .then(data => {
+        console.log('Students loaded:', data);
         if (data.success) {
             tbody.innerHTML = '';
 
@@ -274,11 +259,16 @@ function loadDashboardStats() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update statistics cards
-            document.querySelector('#totalStudents').textContent = data.stats.total_students;
-            document.querySelector('#publishedResults').textContent = data.stats.published_results;
-            document.querySelector('#totalDepartments').textContent = data.stats.total_departments;
-            document.querySelector('#activeNotices').textContent = data.stats.active_notices;
+            // Update statistics cards - check if elements exist first
+            const totalStudents = document.querySelector('#totalStudents');
+            const publishedResults = document.querySelector('#publishedResults');
+            const totalDepartments = document.querySelector('#totalDepartments');
+            const activeNotices = document.querySelector('#activeNotices');
+
+            if (totalStudents) totalStudents.textContent = data.stats.total_students;
+            if (publishedResults) publishedResults.textContent = data.stats.published_results;
+            if (totalDepartments) totalDepartments.textContent = data.stats.total_departments;
+            if (activeNotices) activeNotices.textContent = data.stats.active_notices;
         }
     })
     .catch(error => console.error('Error:', error));
@@ -288,18 +278,18 @@ function loadDashboardStats() {
 function handleFileUpload(fileType) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.xlsx, .xls';
+    fileInput.accept = '.xlsx, .xls, .csv';  // Added .csv support
 
     fileInput.onchange = function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
         // Validate file type
-        const allowedExtensions = ['xlsx', 'xls'];
+        const allowedExtensions = ['xlsx', 'xls', 'csv'];
         const fileExtension = file.name.split('.').pop().toLowerCase();
 
         if (!allowedExtensions.includes(fileExtension)) {
-            alert('Invalid file type. Please upload only .xlsx or .xls files.');
+            alert('Invalid file type. Please upload only .xlsx, .xls, or .csv files.');
             return;
         }
 
@@ -313,6 +303,17 @@ function handleFileUpload(fileType) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', fileType);
+
+        // Add exam type for results upload
+        if (fileType === 'results') {
+            const examType = document.querySelector('#examType')?.value || 'ClassTest';
+            formData.append('exam_type', examType);
+            const semester = document.querySelector('#semester')?.value;
+            if (semester) formData.append('semester', semester);
+            const departmentId = document.querySelector('#department')?.value;
+            if (departmentId) formData.append('department_id', departmentId);
+            // Subject no longer sent - comes from Excel file
+        }
 
         // Show loading state
         const uploadZone = document.querySelector(`#${fileType}UploadZone`);
@@ -328,18 +329,15 @@ function handleFileUpload(fileType) {
             method: 'POST',
             body: formData
         })
-        .then(async response => {
+        .then(response => {
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server response:', errorText);
-                throw new Error(`Server error (${response.status}): ${errorText.slice(0, 200)}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            try {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
                 return response.json();
-            } catch (e) {
-                console.error('JSON parse error:', e);
-                throw new Error('Failed to parse server response as JSON');
             }
+            throw new TypeError("Response was not JSON");
         })
         .then(data => {
             if (data.success) {
@@ -375,8 +373,8 @@ function handleFileUpload(fileType) {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred during upload: ' + error.message);
+            console.error('Upload error:', error);
+            alert('An error occurred during upload. Please try again.');
             if (uploadZone) {
                 uploadZone.innerHTML = originalContent;
             }
@@ -438,14 +436,152 @@ function showUploadPreview(type, responseData) {
     previewDiv.innerHTML = tableHTML;
 }
 
+// Handle results file upload when clicking the zone
+function handleResultsFileClick() {
+    console.log('handleResultsFileClick() called');
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.xlsx, .xls';
+
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            console.log('File selected:', file.name);
+            handleResultsFileUpload(file);
+        }
+    };
+
+    fileInput.click();
+}
+
+// Handle results file upload (drag or click)
+function handleResultsFileUpload(file) {
+    // Get exam details
+    const examType = document.getElementById('examTypeSelect').value;
+    const semester = document.getElementById('semesterSelect').value;
+    const department = document.getElementById('departmentSelect').value;
+    const testNumber = document.getElementById('testNumberInput')?.value;
+
+    // Validate all required fields (subject no longer required - comes from Excel)
+    if (!examType || !semester || !department) {
+        alert('Please select exam type, semester, and department');
+        return;
+    }
+
+    // Validate file type
+    const allowedExtensions = ['xlsx', 'xls'];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+
+    if (!allowedExtensions.includes(fileExtension)) {
+        alert('Invalid file type. Please upload only .xlsx or .xls files.');
+        return;
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+        alert('File size exceeds 10MB. Please upload a smaller file.');
+        return;
+    }
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'results');
+    formData.append('exam_type', examType);
+    formData.append('semester', semester);
+    formData.append('department_id', department);
+
+    if (examType === 'ClassTest' || examType === 'Assignment') {
+        formData.append('test_number', testNumber || '1');
+    }
+
+    // Show loading state
+    const uploadZone = document.getElementById('resultsUploadZone');
+    const originalContent = uploadZone.innerHTML;
+    uploadZone.innerHTML = `
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="mt-2">Processing file...</div>
+        <small class="text-muted">${file.name}</small>
+    `;
+
+    // Upload file
+    fetch('admin/process_excel_upload.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            return response.json();
+        }
+        throw new TypeError("Response was not JSON");
+    })
+    .then(data => {
+        if (data.success) {
+            // Show success message and preview
+            try {
+                showUploadPreview('results', data);
+            } catch (err) {
+                console.error('Error showing preview:', err);
+            }
+
+            // Show detailed results
+            let message = `Upload completed!\n\n`;
+            message += `✓ Success: ${data.stats?.success || 0} records\n`;
+            if (data.stats?.failed > 0) {
+                message += `✗ Failed: ${data.stats.failed} records\n\n`;
+                message += `Errors:\n`;
+                data.stats.errors?.slice(0, 5)?.forEach(err => {
+                    message += `- ${err}\n`;
+                });
+                if (data.stats.errors?.length > 5) {
+                    message += `... and ${data.stats.errors.length - 5} more errors`;
+                }
+            }
+            alert(message);
+
+            // Store upload info for undo feature (if manage_results.js is loaded)
+            if (typeof storeLastUpload === 'function' && data.upload_info) {
+                const examTitle = document.getElementById('examTypeSelect')?.options[document.getElementById('examTypeSelect')?.selectedIndex]?.text || 'Unknown';
+                storeLastUpload({
+                    upload_id: data.upload_info.upload_id,
+                    count: data.stats.success,
+                    timestamp: data.upload_info.timestamp,
+                    exam_title: examTitle
+                });
+            }
+
+            // Reset upload zone after showing preview
+            setTimeout(() => {
+                uploadZone.innerHTML = originalContent;
+            }, 2000);
+        } else {
+            alert(data.message || 'Upload failed');
+            uploadZone.innerHTML = originalContent;
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        alert('An error occurred during upload. Please try again.');
+        uploadZone.innerHTML = originalContent;
+    });
+}
+
 // Initialize drag and drop zones
 function initializeDropZones() {
     const dropZones = document.querySelectorAll('.upload-zone');
-    
+
     dropZones.forEach(zone => {
         zone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            zone.classList.add('upload-zone-drag');
+            // Only add visual feedback if zone is enabled
+            if (zone.style.pointerEvents !== 'none') {
+                zone.classList.add('upload-zone-drag');
+            }
         });
 
         zone.addEventListener('dragleave', () => {
@@ -455,32 +591,76 @@ function initializeDropZones() {
         zone.addEventListener('drop', (e) => {
             e.preventDefault();
             zone.classList.remove('upload-zone-drag');
-            
+
+            // Check if zone is enabled
+            if (zone.style.pointerEvents === 'none') {
+                alert('Please select all required fields first (Exam Type, Semester, Department, etc.)');
+                return;
+            }
+
             const file = e.dataTransfer.files[0];
             if (file) {
                 const fileType = zone.id.replace('UploadZone', '');
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('type', fileType);
-                
-                // Trigger the upload process
-                handleFileUpload(fileType);
+
+                // For results upload, check if exam details are filled
+                if (fileType === 'results') {
+                    handleResultsFileUpload(file);
+                } else {
+                    handleFileUpload(fileType);
+                }
             }
         });
 
         // Handle click to upload
-        zone.addEventListener('click', () => {
+        zone.addEventListener('click', (e) => {
+            // Check if zone is enabled
+            if (zone.style.pointerEvents === 'none') {
+                alert('Please select all required fields first (Exam Type, Semester, Department, etc.)');
+                return;
+            }
+
             const fileType = zone.id.replace('UploadZone', '');
-            handleFileUpload(fileType);
+
+            // For results upload, need special handling
+            if (fileType === 'results') {
+                handleResultsFileClick();
+            } else {
+                handleFileUpload(fileType);
+            }
+        });
+
+        // Also handle button click inside the zone
+        const buttons = zone.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent double firing
+
+                // Check if zone is enabled
+                if (zone.style.pointerEvents === 'none') {
+                    alert('Please select all required fields first (Exam Type, Semester, Department, etc.)');
+                    return;
+                }
+
+                const fileType = zone.id.replace('UploadZone', '');
+
+                // For results upload, need special handling
+                if (fileType === 'results') {
+                    handleResultsFileClick();
+                } else {
+                    handleFileUpload(fileType);
+                }
+            });
         });
     });
 }
 
 // Function to load notices
 function loadNotices() {
+    console.log('loadNotices() called');
     fetch('admin/get_notices.php')
     .then(response => response.json())
     .then(data => {
+        console.log('Notices loaded:', data);
         if (data.success) {
             const tbody = document.querySelector('#noticesTable tbody');
             tbody.innerHTML = '';

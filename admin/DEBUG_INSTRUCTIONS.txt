@@ -1,0 +1,84 @@
+==========================================
+STEP-BY-STEP DEBUG INSTRUCTIONS
+==========================================
+
+PROBLEM: Data is being saved in wrong database columns
+- student_id column contains marks (28, 27, 26...)
+- marks_obtained column shows 999.99 (overflow)
+- Percentages showing 3333% instead of normal values
+
+==========================================
+STEP 1: Fix database column size
+==========================================
+
+1. Open phpMyAdmin and select your SRMS database
+2. Click "SQL" tab
+3. Copy and paste this ENTIRE file: FIX_DATABASE_STRUCTURE.sql
+4. Click "Go" to run it
+5. This will:
+   - Show you the current structure
+   - Fix marks_obtained from decimal(5,2) to decimal(10,2)
+   - Verify the fix worked
+
+==========================================
+STEP 2: Delete all bad data
+==========================================
+
+1. In phpMyAdmin SQL tab, run this:
+
+   DELETE FROM results WHERE marks_obtained = 999.99;
+
+2. This removes all corrupted results
+3. You'll re-upload fresh data after we fix the code
+
+==========================================
+STEP 3: Test bind_param
+==========================================
+
+1. Open your browser to:
+   http://localhost/SRMS/admin/test_bind_param.php
+
+2. This will test if bind_param is working correctly
+3. You should see output showing if values match
+
+EXPECTED OUTPUT (if working):
+   ✓✓✓ ALL VALUES CORRECT! bind_param is working fine.
+
+IF YOU SEE PROBLEMS:
+   It will show which columns have wrong data
+
+==========================================
+STEP 4: Test actual upload with logging
+==========================================
+
+1. Open admin panel
+2. Upload ONE of your Excel files (class test or midterm)
+3. After upload completes, check the PHP error log at:
+   c:\xampp\htdocs\SRMS\admin\php_errors.log
+
+4. You should see lines like this:
+   ROW 2: Binding values - examId=10, studentId=12345, subjectId=5, marks=28.5, total=30, ...
+   ROW 2: Database has - exam_id=10, student_id=12345, subject_id=5, marks=28.5, total=30
+
+5. COMPARE the "Binding values" with "Database has"
+   - If they MATCH: bind_param is working, problem is elsewhere
+   - If they DON'T MATCH: bind_param is broken, we need different approach
+
+==========================================
+STEP 5: Report back
+==========================================
+
+Tell me:
+1. What did test_bind_param.php show? (copy the output)
+2. What does php_errors.log show? (copy 2-3 lines of the debug output)
+3. After re-uploading, what does the Manage Results section show now?
+
+==========================================
+ALTERNATIVE FIX (if bind_param fails)
+==========================================
+
+If test shows bind_param is broken, I'll switch to using
+positional INSERT without naming columns, which is more
+reliable on some MySQL/PHP versions.
+
+==========================================

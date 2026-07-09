@@ -18,6 +18,8 @@ if (!isset($_GET['search']) || empty($_GET['search'])) {
 }
 
 $search = $_GET['search'];
+$examType = isset($_GET['exam_type']) ? $_GET['exam_type'] : null;
+$subjectId = isset($_GET['subject_id']) ? intval($_GET['subject_id']) : null;
 
 // Search for student by index number or board roll
 $sql = "SELECT s.*, d.name as department_name, d.code as department_code
@@ -47,19 +49,42 @@ if (!$student) {
     die('Error: Unable to fetch student data.');
 }
 
-// Get student results
-$sql_results = "SELECT r.*, s.subject_name, s.subject_code, s.total_marks as subject_total_marks
+// Build query with optional exam type and subject filtering
+$sql_results = "SELECT r.*, s.subject_name, s.subject_code, s.total_marks as subject_total_marks,
+                e.title as exam_name, e.exam_type, e.exam_date
                 FROM results r
                 LEFT JOIN subjects s ON r.subject_id = s.id
-                WHERE r.student_id = ? AND r.semester = ?
-                ORDER BY s.subject_code";
+                LEFT JOIN exams e ON r.exam_id = e.id
+                WHERE r.student_id = ? AND r.semester = ?";
+
+// Add exam type filter if provided
+if ($examType) {
+    $sql_results .= " AND e.exam_type = ?";
+}
+
+// Add subject filter if provided (for ClassTest)
+if ($subjectId) {
+    $sql_results .= " AND r.subject_id = ?";
+}
+
+$sql_results .= " ORDER BY s.subject_code, e.exam_date";
 
 $stmt_results = $conn->prepare($sql_results);
 if (!$stmt_results) {
     die('Database Error (Results): ' . $conn->error);
 }
 
-$stmt_results->bind_param("ii", $student['id'], $student['semester']);
+// Bind parameters based on filters
+if ($examType && $subjectId) {
+    $stmt_results->bind_param("iisi", $student['id'], $student['semester'], $examType, $subjectId);
+} elseif ($examType) {
+    $stmt_results->bind_param("iis", $student['id'], $student['semester'], $examType);
+} elseif ($subjectId) {
+    $stmt_results->bind_param("iii", $student['id'], $student['semester'], $subjectId);
+} else {
+    $stmt_results->bind_param("ii", $student['id'], $student['semester']);
+}
+
 if (!$stmt_results->execute()) {
     die('Query Execution Error (Results): ' . $stmt_results->error);
 }
@@ -67,8 +92,22 @@ if (!$stmt_results->execute()) {
 $results = $stmt_results->get_result();
 
 // Check if student has any results
+$examTypeLabel = '';
+if ($examType) {
+    $examTypeLabel = ucfirst($examType);
+    if ($examType === 'ClassTest') {
+        $examTypeLabel = 'Class Test';
+    }
+}
+
 if ($results->num_rows == 0) {
-    die('Error: No results found for student <strong>' . htmlspecialchars($student['student_name']) . '</strong> in Semester ' . $student['semester'] . '<br><br>Please make sure results have been published for this student.<br><br><a href="index.php">Go back to search</a>');
+    $errorMsg = 'Error: No results found for student <strong>' . htmlspecialchars($student['student_name']) . '</strong>';
+    if ($examTypeLabel) {
+        $errorMsg .= ' for ' . $examTypeLabel;
+    }
+    $errorMsg .= ' in Semester ' . $student['semester'];
+    $errorMsg .= '<br><br>Please make sure results have been published for this student.<br><br><a href="index.php">Go back to search</a>';
+    die($errorMsg);
 }
 
 // Calculate totals
@@ -78,10 +117,16 @@ $subjectCount = 0;
 $gradePoints = 0;
 
 $subjects = [];
+$subjectName = ''; // For ClassTest with specific subject
 while ($row = $results->fetch_assoc()) {
     $totalMarks += $row['marks_obtained'];
     $totalPossible += $row['total_marks'];
     $subjectCount++;
+
+    // Store subject name for Class Test filtering
+    if ($subjectId && empty($subjectName) && !empty($row['subject_name'])) {
+        $subjectName = $row['subject_name'];
+    }
 
     // Calculate grade points based on percentage
     $percentage = ($row['marks_obtained'] / $row['total_marks']) * 100;
@@ -139,7 +184,7 @@ if (!$tcpdfAvailable) {
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Student Result - <?php echo htmlspecialchars($student['student_name']); ?></title>
+    <title><?php echo $examTypeLabel ? $examTypeLabel . ' ' : ''; ?>Result - <?php echo htmlspecialchars($student['student_name']); ?></title>
     <style>
         @page {
             size: A4;
@@ -305,7 +350,10 @@ if (!$tcpdfAvailable) {
 <body>
     <div class="header">
         <h1>Student Result Management System</h1>
-        <h2>Academic Result Sheet</h2>
+        <h2><?php echo $examTypeLabel ? $examTypeLabel . ' ' : ''; ?>Result Sheet</h2>
+        <?php if ($subjectName): ?>
+        <p style="font-size: 14pt; color: #34495e; margin-bottom: 5px;">Subject: <strong><?php echo htmlspecialchars($subjectName); ?></strong></p>
+        <?php endif; ?>
         <p>Semester <?php echo $student['semester']; ?> - Academic Year <?php echo date('Y'); ?></p>
     </div>
 
@@ -337,8 +385,12 @@ if (!$tcpdfAvailable) {
     <table class="results-table">
         <thead>
             <tr>
+                <?php if ($examType === 'ClassTest' && $subjectId): ?>
+                <th>Exam/Test Name</th>
+                <?php else: ?>
                 <th>Subject Code</th>
                 <th>Subject Name</th>
+                <?php endif; ?>
                 <th style="text-align: center;">Marks</th>
                 <th style="text-align: center;">Percentage</th>
                 <th style="text-align: center;">Grade</th>
@@ -348,8 +400,12 @@ if (!$tcpdfAvailable) {
         <tbody>
             <?php foreach ($subjects as $subject): ?>
             <tr>
+                <?php if ($examType === 'ClassTest' && $subjectId): ?>
+                <td><?php echo htmlspecialchars($subject['exam_name'] ?? 'Class Test'); ?></td>
+                <?php else: ?>
                 <td><?php echo htmlspecialchars($subject['subject_code']); ?></td>
                 <td><?php echo htmlspecialchars($subject['subject_name']); ?></td>
+                <?php endif; ?>
                 <td style="text-align: center;"><?php echo $subject['marks_obtained'] . ' / ' . $subject['total_marks']; ?></td>
                 <td style="text-align: center;"><?php echo number_format($subject['percentage'], 2); ?>%</td>
                 <td style="text-align: center;"><strong><?php echo $subject['grade']; ?></strong></td>
@@ -359,7 +415,7 @@ if (!$tcpdfAvailable) {
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="2" style="text-align: right;"><strong>Total / Average</strong></td>
+                <td colspan="<?php echo ($examType === 'ClassTest' && $subjectId) ? '1' : '2'; ?>" style="text-align: right;"><strong>Total / Average</strong></td>
                 <td style="text-align: center;"><strong><?php echo $totalMarks . ' / ' . $totalPossible; ?></strong></td>
                 <td style="text-align: center;"><strong><?php echo number_format($percentage, 2); ?>%</strong></td>
                 <td colspan="2"></td>
@@ -408,7 +464,7 @@ $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8',
 // Set document information
 $pdf->SetCreator(PDF_CREATOR);
 $pdf->SetAuthor('SRMS');
-$pdf->SetTitle('Student Result - ' . $student['student_name']);
+$pdf->SetTitle(($examTypeLabel ? $examTypeLabel . ' ' : '') . 'Result - ' . $student['student_name']);
 $pdf->SetSubject('Academic Result');
 
 // Remove default header/footer
@@ -430,6 +486,7 @@ $html = '
 <style>
     h1 { color: #2c3e50; text-align: center; font-size: 20pt; }
     h2 { color: #5eb3f6; text-align: center; font-size: 14pt; }
+    h3 { color: #34495e; text-align: center; font-size: 12pt; }
     table { border-collapse: collapse; width: 100%; }
     th { background-color: #5eb3f6; color: white; padding: 8px; text-align: left; }
     td { padding: 6px; border: 1px solid #ddd; }
@@ -438,7 +495,8 @@ $html = '
 </style>
 
 <h1>Student Result Management System</h1>
-<h2>Academic Result Sheet - Semester ' . $student['semester'] . '</h2>
+<h2>' . ($examTypeLabel ? $examTypeLabel . ' ' : '') . 'Result Sheet - Semester ' . $student['semester'] . '</h2>
+' . ($subjectName ? '<h3>Subject: ' . htmlspecialchars($subjectName) . '</h3>' : '') . '
 <br>
 
 <table class="info-table">
@@ -451,9 +509,19 @@ $html = '
 
 <table border="1" cellpadding="5">
     <thead>
-        <tr>
+        <tr>';
+
+// Dynamic table headers based on exam type
+if ($examType === 'ClassTest' && $subjectId) {
+    $html .= '
+            <th>Exam/Test Name</th>';
+} else {
+    $html .= '
             <th>Subject Code</th>
-            <th>Subject Name</th>
+            <th>Subject Name</th>';
+}
+
+$html .= '
             <th align="center">Marks</th>
             <th align="center">Percentage</th>
             <th align="center">Grade</th>
@@ -463,9 +531,16 @@ $html = '
     <tbody>';
 
 foreach ($subjects as $subject) {
-    $html .= '<tr>
-        <td>' . htmlspecialchars($subject['subject_code']) . '</td>
-        <td>' . htmlspecialchars($subject['subject_name']) . '</td>
+    $html .= '<tr>';
+
+    if ($examType === 'ClassTest' && $subjectId) {
+        $html .= '<td>' . htmlspecialchars($subject['exam_name'] ?? 'Class Test') . '</td>';
+    } else {
+        $html .= '<td>' . htmlspecialchars($subject['subject_code']) . '</td>
+        <td>' . htmlspecialchars($subject['subject_name']) . '</td>';
+    }
+
+    $html .= '
         <td align="center">' . $subject['marks_obtained'] . ' / ' . $subject['total_marks'] . '</td>
         <td align="center">' . number_format($subject['percentage'], 2) . '%</td>
         <td align="center"><strong>' . $subject['grade'] . '</strong></td>
@@ -473,11 +548,13 @@ foreach ($subjects as $subject) {
     </tr>';
 }
 
+$colspan = ($examType === 'ClassTest' && $subjectId) ? '1' : '2';
+
 $html .= '
     </tbody>
     <tfoot>
         <tr>
-            <td colspan="2" align="right"><strong>Total / Average</strong></td>
+            <td colspan="' . $colspan . '" align="right"><strong>Total / Average</strong></td>
             <td align="center"><strong>' . $totalMarks . ' / ' . $totalPossible . '</strong></td>
             <td align="center"><strong>' . number_format($percentage, 2) . '%</strong></td>
             <td colspan="2"></td>
@@ -510,6 +587,17 @@ $html .= '
 // Output the HTML content
 $pdf->writeHTML($html, true, false, true, false, '');
 
+// Generate filename with exam type if specified
+$filename = '';
+if ($examTypeLabel) {
+    $filename .= str_replace(' ', '_', $examTypeLabel) . '_';
+}
+$filename .= 'Result_' . $student['index_no'] . '_Semester_' . $student['semester'];
+if ($subjectName) {
+    $filename .= '_' . preg_replace('/[^A-Za-z0-9_-]/', '', str_replace(' ', '_', $subjectName));
+}
+$filename .= '.pdf';
+
 // Close and output PDF document
-$pdf->Output('Result_' . $student['index_no'] . '_Semester_' . $student['semester'] . '.pdf', 'D');
+$pdf->Output($filename, 'D');
 ?>

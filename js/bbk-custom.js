@@ -5,6 +5,8 @@
 
 // Global variables
 let currentStudentData = null;
+let currentExamType = 'Final';
+let currentSubjectId = null;
 
 // ================================================
 // INITIALIZATION
@@ -242,6 +244,9 @@ function displayResult(data) {
             </div>
         </div>
     `;
+
+    // Load Final Exam results by default instead of showing all
+    loadResultsByExamType('Final');
 }
 
 /**
@@ -450,8 +455,357 @@ function downloadPDF() {
         return;
     }
 
+    // Don't allow Assignment PDF export
+    if (currentExamType === 'Assignment') {
+        showMessage('Assignment results cannot be exported to PDF at this time', 'info');
+        return;
+    }
+
     const searchValue = currentStudentData.student.index_no || currentStudentData.student.board_roll;
-    window.location.href = 'download_result_pdf.php?search=' + encodeURIComponent(searchValue);
+    let pdfUrl = 'download_result_pdf.php?search=' + encodeURIComponent(searchValue);
+
+    // Add exam type filter (exclude 'All' as it means no filter)
+    if (currentExamType && currentExamType !== 'All') {
+        pdfUrl += '&exam_type=' + encodeURIComponent(currentExamType);
+
+        // Add subject filter for ClassTest
+        if (currentExamType === 'ClassTest' && currentSubjectId) {
+            pdfUrl += '&subject_id=' + encodeURIComponent(currentSubjectId);
+        }
+    }
+
+    window.location.href = pdfUrl;
+}
+
+// ================================================
+// EXAM TYPE FILTERING
+// ================================================
+
+/**
+ * Switch between exam types (All, Final, Midterm, ClassTest)
+ */
+function switchExamType(examType) {
+    currentExamType = examType;
+    currentSubjectId = null;
+
+    // Update active tab
+    const tabs = document.querySelectorAll('#examTypeTabs button');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    event.target.closest('button').classList.add('active');
+
+    // Handle ClassTest and Assignment - show subject selection
+    const classTestSubjects = document.getElementById('classTestSubjects');
+    const resultsTableSection = document.getElementById('resultsTableSection');
+
+    if (examType === 'ClassTest' || examType === 'Assignment') {
+        // Show subject selection for class tests and assignments
+        classTestSubjects.style.display = 'block';
+        resultsTableSection.style.display = 'none';
+        loadClassTestSubjects();
+    } else {
+        // Show results table for Final and Midterm
+        classTestSubjects.style.display = 'none';
+        resultsTableSection.style.display = 'block';
+        loadResultsByExamType(examType);
+    }
+}
+
+/**
+ * Load subjects available for class tests and assignments
+ */
+function loadClassTestSubjects() {
+    if (!currentStudentData || !currentStudentData.student) return;
+
+    const studentId = currentStudentData.student.id;
+    const semester = currentStudentData.student.semester || currentStudentData.student.current_semester;
+
+    fetch(`api/get_classtest_subjects.php?student_id=${studentId}&semester=${semester}&exam_type=${currentExamType}`)
+        .then(response => response.json())
+        .then(data => {
+            const subjectCards = document.getElementById('subjectCards');
+
+            if (data.success && data.subjects && data.subjects.length > 0) {
+                subjectCards.innerHTML = data.subjects.map(subject => `
+                    <div class="col-md-4 col-sm-6">
+                        <div class="card h-100" style="border-radius: 15px; border: 2px solid #5eb3f6; cursor: pointer; transition: all 0.3s;"
+                             onclick="selectClassTestSubject(${subject.subject_id}, '${subject.subject_name}')"
+                             onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 20px rgba(94,179,246,0.3)';"
+                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                            <div class="card-body text-center">
+                                <div class="mb-2" style="font-size: 2rem; color: #5eb3f6;">
+                                    <i class="bi bi-book-fill"></i>
+                                </div>
+                                <h5 class="card-title mb-1">${subject.subject_code}</h5>
+                                <p class="card-text text-muted">${subject.subject_name}</p>
+                                <span class="badge" style="background: linear-gradient(135deg, #5eb3f6, #87c5f9); color: white;">
+                                    ${subject.test_count} ${subject.test_count === 1 ? 'Test' : 'Tests'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                subjectCards.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info" style="border-radius: 15px; border: none;">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No class tests available for this semester yet.
+                        </div>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading subjects:', error);
+            document.getElementById('subjectCards').innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger" style="border-radius: 15px; border: none;">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Error loading subjects. Please try again.
+                    </div>
+                </div>
+            `;
+        });
+}
+
+/**
+ * Select a subject to view its class tests
+ */
+function selectClassTestSubject(subjectId, subjectName) {
+    currentSubjectId = subjectId;
+
+    // Hide subject cards, show results table
+    document.getElementById('classTestSubjects').style.display = 'none';
+    document.getElementById('resultsTableSection').style.display = 'block';
+
+    // Update title based on exam type
+    const examTypeLabel = currentExamType === 'Assignment' ? 'Assignment' : 'Class Test';
+    document.getElementById('resultsTableTitle').innerHTML =
+        `${examTypeLabel} Results - ${subjectName} <button class="btn btn-sm btn-outline-secondary ms-2" onclick="backToSubjects()"><i class="bi bi-arrow-left me-1"></i>Back to Subjects</button>`;
+
+    // Load results for this subject and exam type
+    loadClassTestResults(subjectId);
+}
+
+/**
+ * Go back to subject selection
+ */
+function backToSubjects() {
+    currentSubjectId = null;
+    document.getElementById('classTestSubjects').style.display = 'block';
+    document.getElementById('resultsTableSection').style.display = 'none';
+}
+
+/**
+ * Load class test results for a specific subject
+ */
+function loadClassTestResults(subjectId) {
+    if (!currentStudentData || !currentStudentData.student) return;
+
+    const studentId = currentStudentData.student.id;
+
+    fetch(`api/get_classtest_results.php?student_id=${studentId}&subject_id=${subjectId}&exam_type=${currentExamType}`)
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('resultTableBody');
+
+            if (data.success && data.results && data.results.length > 0) {
+                tableBody.innerHTML = data.results.map(result => {
+                    const badgeClass = getGradeBadgeClass(result.grade);
+                    return `
+                        <tr>
+                            <td><strong>${result.exam_title || `CT-${result.exam_number}`}</strong></td>
+                            <td>${result.subject_name}</td>
+                            <td class="text-center">${result.marks_obtained}</td>
+                            <td class="text-center">${result.total_marks}</td>
+                            <td class="text-center">${result.percentage}%</td>
+                            <td class="text-center">
+                                <span class="bbk-badge ${badgeClass}">${result.grade}</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Update summary cards
+                updateSummaryCards(data.results);
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No class test results found for this subject</td></tr>';
+                document.getElementById('summaryCards').innerHTML = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading class test results:', error);
+            document.getElementById('resultTableBody').innerHTML =
+                '<tr><td colspan="6" class="text-center text-danger">Error loading results. Please try again.</td></tr>';
+        });
+}
+
+/**
+ * Load results filtered by exam type (Final, Midterm, or all)
+ */
+function loadResultsByExamType(examType) {
+    if (!currentStudentData || !currentStudentData.student) return;
+
+    const studentId = currentStudentData.student.id;
+    const url = `api/get_results_by_exam_type.php?student_id=${studentId}&exam_type=${examType}`;
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const tableBody = document.getElementById('resultTableBody');
+
+        // Update title
+        const titleMap = {
+            'Final': 'Final Exam Results',
+            'Midterm': 'Midterm Exam Results'
+        };
+        document.getElementById('resultsTableTitle').textContent = titleMap[examType] || 'Subject Results';
+
+        if (data.success && data.results && data.results.length > 0) {
+            tableBody.innerHTML = data.results.map(result => {
+                const badgeClass = getGradeBadgeClass(result.grade);
+                return `
+                    <tr>
+                        <td><strong>${result.subject_code}</strong></td>
+                        <td>${result.subject_name}</td>
+                        <td class="text-center">${result.marks_obtained}</td>
+                        <td class="text-center">${result.total_marks}</td>
+                        <td class="text-center">${result.percentage}%</td>
+                        <td class="text-center">
+                            <span class="bbk-badge ${badgeClass}">${result.grade}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update summary cards
+            updateSummaryCards(data.results);
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No results found for this exam type</td></tr>';
+            document.getElementById('summaryCards').innerHTML = '';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading results:', error);
+
+        // Fallback to showing all results if filtering fails
+        if (examType === 'all' && currentStudentData && currentStudentData.all_subjects) {
+            displayOriginalResults();
+        } else {
+            document.getElementById('resultTableBody').innerHTML =
+                '<tr><td colspan="6" class="text-center text-danger">Error loading results. Please try again.</td></tr>';
+        }
+    });
+}
+
+/**
+ * Display original results from currentStudentData
+ */
+function displayOriginalResults() {
+    const tableBody = document.getElementById('resultTableBody');
+    const resultsToShow = currentStudentData.all_subjects || [];
+
+    if (resultsToShow && resultsToShow.length > 0) {
+        tableBody.innerHTML = resultsToShow.map(result => {
+            const badgeClass = getGradeBadgeClass(result.grade);
+            return `
+                <tr>
+                    <td><strong>${result.subject_code}</strong></td>
+                    <td>${result.subject_name}</td>
+                    <td class="text-center">${result.marks_obtained}</td>
+                    <td class="text-center">${result.total_marks}</td>
+                    <td class="text-center">${result.percentage}%</td>
+                    <td class="text-center">
+                        <span class="bbk-badge ${badgeClass}">${result.grade}</span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+}
+
+/**
+ * Update summary cards based on filtered results
+ */
+function updateSummaryCards(results) {
+    const summaryCards = document.getElementById('summaryCards');
+
+    if (!results || results.length === 0) {
+        summaryCards.innerHTML = '';
+        return;
+    }
+
+    // Calculate totals
+    let totalMarksObtained = 0;
+    let totalMarksPossible = 0;
+
+    results.forEach(result => {
+        totalMarksObtained += parseFloat(result.marks_obtained) || 0;
+        totalMarksPossible += parseFloat(result.total_marks) || 0;
+    });
+
+    const percentage = totalMarksPossible > 0
+        ? ((totalMarksObtained / totalMarksPossible) * 100).toFixed(2)
+        : 0;
+
+    const grade = calculateGrade(percentage);
+
+    summaryCards.innerHTML = `
+        <div class="col-md-3 col-6">
+            <div class="card text-white text-center" style="background: linear-gradient(135deg, #5eb3f6, #87c5f9); border: none; border-radius: 15px;">
+                <div class="card-body">
+                    <h6 class="opacity-75 mb-2" style="color: white;">Total Subjects</h6>
+                    <h2 class="mb-0" style="color: white;">${results.length}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-white text-center" style="background: linear-gradient(135deg, #28a745, #20c997); border: none; border-radius: 15px;">
+                <div class="card-body">
+                    <h6 class="opacity-75 mb-2" style="color: white;">Total Marks</h6>
+                    <h2 class="mb-0" style="color: white;">${totalMarksObtained}/${totalMarksPossible}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-white text-center" style="background: linear-gradient(135deg, #17a2b8, #138496); border: none; border-radius: 15px;">
+                <div class="card-body">
+                    <h6 class="opacity-75 mb-2" style="color: white;">Average</h6>
+                    <h2 class="mb-0" style="color: white;">${percentage}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-white text-center" style="background: linear-gradient(135deg, #f9a826, #e89615); border: none; border-radius: 15px;">
+                <div class="card-body">
+                    <h6 class="opacity-75 mb-2" style="color: white;">Grade</h6>
+                    <h2 class="mb-0" style="color: white;">${grade}</h2>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Calculate grade from percentage
+ */
+function calculateGrade(percentage) {
+    if (percentage >= 90) return 'A+';
+    if (percentage >= 85) return 'A';
+    if (percentage >= 80) return 'A-';
+    if (percentage >= 75) return 'B+';
+    if (percentage >= 70) return 'B';
+    if (percentage >= 65) return 'B-';
+    if (percentage >= 60) return 'C+';
+    if (percentage >= 55) return 'C';
+    if (percentage >= 50) return 'C-';
+    if (percentage >= 40) return 'D';
+    return 'F';
 }
 
 // ================================================

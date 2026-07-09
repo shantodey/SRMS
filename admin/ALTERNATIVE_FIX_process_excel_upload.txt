@@ -1,0 +1,78 @@
+==========================================
+ALTERNATIVE FIX for process_excel_upload.php
+==========================================
+
+IF test_bind_param.php shows that bind_param is broken,
+use this alternative code that doesn't rely on named columns.
+
+This uses positional INSERT to match the exact physical
+column order in the database.
+
+==========================================
+REPLACE lines 337-356 with this code:
+==========================================
+
+            } else {
+                // Insert new result using POSITIONAL insert (more reliable)
+                // Database column order: id, exam_id, student_id, subject_id, marks_obtained, total_marks, percentage, grade, semester, upload_id, exam_type, created_at, updated_at
+                // We'll let MySQL handle: id (auto), percentage (NULL), exam_type (NULL), created_at (NOW), updated_at (NOW)
+
+                $insertSql = "INSERT INTO results VALUES (
+                    NULL,           -- id (auto increment)
+                    ?,              -- exam_id
+                    ?,              -- student_id
+                    ?,              -- subject_id
+                    ?,              -- marks_obtained
+                    ?,              -- total_marks
+                    NULL,           -- percentage (will be calculated by trigger or later)
+                    ?,              -- grade
+                    ?,              -- semester
+                    ?,              -- upload_id
+                    NULL,           -- exam_type (NULL for now)
+                    NOW(),          -- created_at
+                    NOW()           -- updated_at
+                )";
+
+                $insertStmt = $conn->prepare($insertSql);
+
+                // DEBUG LOGGING - Log what we're about to insert
+                error_log("ROW $rowNumber: Binding values - examId=$examId, studentId=$studentId, subjectId=$currentSubjectId, marks=$marksObtained, total=$totalMarks, grade=$grade, sem=$semester, uploadId=$uploadId");
+
+                // Bind parameters in EXACT order they appear in VALUES
+                $insertStmt->bind_param("iiiddsis",
+                    $examId,            // position 2 - exam_id
+                    $studentId,         // position 3 - student_id
+                    $currentSubjectId,  // position 4 - subject_id
+                    $marksObtained,     // position 5 - marks_obtained
+                    $totalMarks,        // position 6 - total_marks
+                    $grade,             // position 8 - grade
+                    $semester,          // position 9 - semester
+                    $uploadId           // position 10 - upload_id
+                );
+
+                $insertStmt->execute();
+
+                // DEBUG LOGGING - Verify what got saved
+                $verifyId = $conn->insert_id;
+                $verifyResult = $conn->query("SELECT exam_id, student_id, subject_id, marks_obtained, total_marks FROM results WHERE id = $verifyId");
+                if ($verifyRow = $verifyResult->fetch_assoc()) {
+                    error_log("ROW $rowNumber: Database has - exam_id={$verifyRow['exam_id']}, student_id={$verifyRow['student_id']}, subject_id={$verifyRow['subject_id']}, marks={$verifyRow['marks_obtained']}, total={$verifyRow['total_marks']}");
+                }
+            }
+
+==========================================
+NOTES:
+==========================================
+
+This approach:
+1. Uses positional VALUES instead of named columns
+2. Explicitly sets all 13 columns in physical order
+3. Uses NULL for auto/default columns
+4. Uses NOW() for timestamps
+5. Still logs debug info to verify
+
+This is MORE RELIABLE on some PHP/MySQL versions because
+it doesn't rely on MySQL correctly mapping named column
+INSERT statements to bind_param positions.
+
+==========================================

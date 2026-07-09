@@ -41,6 +41,7 @@ while (ob_get_level()) {
     ob_end_clean();
 }
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, must-revalidate');
 
 // Initialize response array
 $response = ['success' => false, 'message' => '', 'data' => [], 'stats' => ['success' => 0, 'failed' => 0, 'errors' => []]];
@@ -100,7 +101,31 @@ try {
     if ($_POST['type'] === 'students') {
         processStudents($conn, $rows, $response);
     } else if ($_POST['type'] === 'results') {
-        processResults($conn, $rows, $response);
+        // Get exam layer parameters
+        $examType = $_POST['exam_type'] ?? 'Final';
+        $semester = $_POST['semester'] ?? null;
+        $departmentId = $_POST['department_id'] ?? null;
+        $subjectId = $_POST['subject_id'] ?? null; // For ClassTest
+        $testNumber = $_POST['test_number'] ?? 1;
+
+        if (!$semester || !$departmentId) {
+            throw new Exception('Semester and Department are required for result upload');
+        }
+
+        // Generate unique upload ID
+        $uploadId = uniqid('upload_', true);
+        $response['upload_info'] = [
+            'upload_id' => $uploadId,
+            'timestamp' => date('Y-m-d H:i:s'),
+            'exam_type' => $examType,
+            'semester' => $semester
+        ];
+
+        processResults($conn, $rows, $response, $examType, $semester, $departmentId, $subjectId, $testNumber, $uploadId);
+
+        // Save upload history (create table if doesn't exist)
+        createUploadHistoryTable($conn);
+        saveUploadHistory($conn, $uploadId, $examType, $semester, $departmentId, $subjectId, $response['stats']['success']);
     } else {
         throw new Exception('Invalid upload type');
     }
@@ -214,9 +239,10 @@ function processStudents($conn, $rows, &$response) {
     }
 }
 
-// Function to process results data
-function processResults($conn, $rows, &$response) {
+// Function to process results data with exam layer support
+function processResults($conn, $rows, &$response, $examType, $semester, $departmentId, $subjectId = null, $testNumber = 1, $uploadId = null) {
     $rowNumber = 1;
+    $examId = null; // Will be set after creating/finding the exam
 
     foreach ($rows as $row) {
         $rowNumber++;
@@ -227,19 +253,40 @@ function processResults($conn, $rows, &$response) {
         }
 
         try {
-            // Validate required fields (either Index No or Board Roll is required, not both)
-            if ((empty($row[0]) && empty($row[1])) || // Need at least one: Index No or Board Roll
-                empty($row[2]) || empty($row[3]) ||   // Subject Code and Name
-                !isset($row[4]) || empty($row[5])) {  // Marks and Total Marks
-                throw new Exception("Missing required fields in row $rowNumber. Required: Either Index No or Board Roll, Subject Code, Subject Name, Marks, Total Marks");
+            // UNIFIED EXCEL FORMAT FOR ALL EXAM TYPES:
+            // Column 0: Index No
+            // Column 1: Board Roll
+            // Column 2: Subject Code (REQUIRED for all exam types)
+            // Column 3: Subject Name
+            // Column 4: Marks Obtained
+            // Column 5: Total Marks
+
+            // Read all columns the same way
+            $indexNo = !empty($row[0]) ? trim($row[0]) : '';
+            $boardRoll = !empty($row[1]) ? trim($row[1]) : '';
+            $subjectCode = !empty($row[2]) ? trim($row[2]) : '';
+            $subjectName = !empty($row[3]) ? trim($row[3]) : '';
+            $marksObtained = !empty($row[4]) ? floatval($row[4]) : 0;
+            $totalMarks = !empty($row[5]) ? floatval($row[5]) : 0;
+
+            // Validate required fields
+            if (empty($indexNo) && empty($boardRoll)) {
+                throw new Exception("Missing Index No or Board Roll in row $rowNumber");
             }
 
-            $indexNo = !empty($row[0]) ? trim($row[0]) : '';    // Optional if Board Roll is provided
-            $boardRoll = !empty($row[1]) ? trim($row[1]) : '';  // Optional if Index No is provided
-            $subjectCode = trim($row[2]);
-            $subjectName = trim($row[3]);
-            $marksObtained = floatval($row[4]);
-            $totalMarks = floatval($row[5]);
+            if (empty($subjectCode)) {
+                throw new Exception("Missing Subject Code in row $rowNumber");
+            }
+
+            if ($totalMarks <= 0) {
+                throw new Exception("Invalid or missing Total Marks in row $rowNumber");
+            }
+
+            // All exam types now use subject code from Excel file
+            $currentSubjectId = getSubjectIdByCode($conn, $subjectCode, $departmentId, $semester);
+            if (!$currentSubjectId) {
+                throw new Exception("Subject not found with code '$subjectCode' for department/semester in row $rowNumber");
+            }
 
             // Get student ID
             $studentId = getStudentId($conn, $indexNo, $boardRoll);
@@ -247,40 +294,48 @@ function processResults($conn, $rows, &$response) {
                 throw new Exception("Student not found with index_no '$indexNo' or board_roll '$boardRoll' in row $rowNumber");
             }
 
-            // Get student's department and semester
-            $studentInfo = getStudentInfo($conn, $studentId);
+            // Create or get exam record
+            // For ClassTest/Assignment: each subject has its own exam
+            // For Final/Midterm: one exam per semester (subject_id is null in exam record)
+            if ($examType === 'ClassTest' || $examType === 'Assignment') {
+                // Get exam for this specific subject
+                $examId = getOrCreateExam($conn, $examType, $semester, $departmentId, $currentSubjectId, $testNumber, $totalMarks);
+            } else {
+                // For Final/Midterm, create exam once per upload (semester-wide)
+                if ($examId === null) {
+                    $examId = getOrCreateExam($conn, $examType, $semester, $departmentId, null, $testNumber, $totalMarks);
+                }
+            }
 
-            // Get or create subject
-            $subjectId = getOrCreateSubject($conn, $subjectCode, $subjectName, $studentInfo['department_id'], $studentInfo['semester'], $totalMarks);
+            // Ensure totalMarks is not zero to prevent division by zero
+            if ($totalMarks <= 0) {
+                throw new Exception("Invalid total marks (must be greater than 0) in row $rowNumber");
+            }
 
             // Calculate percentage and grade
             $percentage = ($marksObtained / $totalMarks) * 100;
             $grade = calculateGrade($conn, $percentage);
 
-            // Current date for exam_date
-            $examDate = date('Y-m-d');
-
             // Check for duplicate result
-            $checkSql = "SELECT id FROM results WHERE student_id = ? AND subject_id = ? AND semester = ?";
+            $checkSql = "SELECT id FROM results WHERE student_id = ? AND exam_id = ? AND subject_id = ?";
             $checkStmt = $conn->prepare($checkSql);
-            $checkStmt->bind_param("iii", $studentId, $subjectId, $studentInfo['semester']);
+            $checkStmt->bind_param("iii", $studentId, $examId, $currentSubjectId);
             $checkStmt->execute();
             $checkResult = $checkStmt->get_result();
 
             if ($checkResult->num_rows > 0) {
-                // Update existing result with percentage and total_marks
+                // Update existing result
                 $existingResult = $checkResult->fetch_assoc();
-                $updateSql = "UPDATE results SET marks_obtained = ?, percentage = ?, total_marks = ?, grade = ?, exam_date = ? WHERE id = ?";
+                $updateSql = "UPDATE results SET marks_obtained = ?, total_marks = ?, grade = ? WHERE id = ?";
                 $updateStmt = $conn->prepare($updateSql);
-                $updateStmt->bind_param("ddissi", $marksObtained, $percentage, $totalMarks, $grade, $examDate, $existingResult['id']);
+                $updateStmt->bind_param("ddsi", $marksObtained, $totalMarks, $grade, $existingResult['id']);
                 $updateStmt->execute();
             } else {
-                // Insert new result with percentage and total_marks
-                $insertSql = "INSERT INTO results (student_id, subject_id, marks_obtained, percentage, total_marks, grade, semester, exam_date)
+                // Insert new result
+                $insertSql = "INSERT INTO results (exam_id, student_id, subject_id, marks_obtained, total_marks, grade, semester, upload_id)
                              VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $insertStmt = $conn->prepare($insertSql);
-                $insertStmt->bind_param("iiddisis", $studentId, $subjectId, $marksObtained, $percentage, $totalMarks, $grade,
-                                       $studentInfo['semester'], $examDate);
+                $insertStmt->bind_param("iiiddsis", $examId, $studentId, $currentSubjectId, $marksObtained, $totalMarks, $grade, $semester, $uploadId);
                 $insertStmt->execute();
             }
 
@@ -410,4 +465,126 @@ function calculateGrade($conn, $percentage) {
     }
 
     return 'F';
+}
+
+// Helper function to get subject ID by code
+function getSubjectIdByCode($conn, $subjectCode, $departmentId, $semester) {
+    $sql = "SELECT id FROM subjects WHERE subject_code = ? AND department_id = ? AND semester = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sii", $subjectCode, $departmentId, $semester);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc()['id'];
+    }
+
+    return null;
+}
+
+// Helper function to get or create exam record
+function getOrCreateExam($conn, $examType, $semester, $departmentId, $subjectId, $testNumber, $totalMarks) {
+    // For ClassTest/Assignment, check by subject_id and exam_number
+    // For Final/Midterm, check by semester and department (subject_id is NULL)
+
+    if (($examType === 'ClassTest' || $examType === 'Assignment') && $subjectId) {
+        // Check for existing class test or assignment
+        $sql = "SELECT id FROM exams
+                WHERE exam_type = ?
+                AND semester = ?
+                AND department_id = ?
+                AND subject_id = ?
+                AND exam_number = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("siiii", $examType, $semester, $departmentId, $subjectId, $testNumber);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            return $result->fetch_assoc()['id'];
+        }
+
+        // Create new exam
+        $subjectInfo = getSubjectInfo($conn, $subjectId);
+        $prefix = $examType === 'ClassTest' ? 'CT' : 'ASN';
+        $title = "{$prefix}-{$testNumber} - {$subjectInfo['subject_name']} - Sem {$semester}";
+
+        $insertSql = "INSERT INTO exams (exam_type, exam_number, title, semester, department_id, subject_id, total_marks, exam_date)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())";
+        $insertStmt = $conn->prepare($insertSql);
+        $insertStmt->bind_param("sisiiid", $examType, $testNumber, $title, $semester, $departmentId, $subjectId, $totalMarks);
+        $insertStmt->execute();
+
+        return $conn->insert_id;
+
+    } else {
+        // For Final/Midterm - one exam per semester/department
+        $sql = "SELECT id FROM exams
+                WHERE exam_type = ?
+                AND semester = ?
+                AND department_id = ?
+                AND subject_id IS NULL";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sii", $examType, $semester, $departmentId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            return $result->fetch_assoc()['id'];
+        }
+
+        // Create new semester-wide exam
+        $title = "{$examType} - Semester {$semester}";
+
+        $insertSql = "INSERT INTO exams (exam_type, exam_number, title, semester, department_id, subject_id, total_marks, exam_date)
+                      VALUES (?, NULL, ?, ?, ?, NULL, ?, CURDATE())";
+        $insertStmt = $conn->prepare($insertSql);
+        $insertStmt->bind_param("ssiid", $examType, $title, $semester, $departmentId, $totalMarks);
+        $insertStmt->execute();
+
+        return $conn->insert_id;
+    }
+}
+
+// Helper function to get subject info
+function getSubjectInfo($conn, $subjectId) {
+    $sql = "SELECT subject_code, subject_name, total_marks FROM subjects WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $subjectId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        return $result->fetch_assoc();
+    }
+
+    return ['subject_code' => '', 'subject_name' => '', 'total_marks' => 100];
+}
+
+// Create upload_history table if it doesn't exist
+function createUploadHistoryTable($conn) {
+    $sql = "CREATE TABLE IF NOT EXISTS upload_history (
+        id VARCHAR(50) PRIMARY KEY,
+        exam_type VARCHAR(50) NOT NULL,
+        semester INT NOT NULL,
+        department_id INT NOT NULL,
+        subject_id INT NULL,
+        records_count INT NOT NULL,
+        status VARCHAR(20) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at),
+        INDEX idx_status (status)
+    )";
+    $conn->query($sql);
+}
+
+// Save upload history
+function saveUploadHistory($conn, $uploadId, $examType, $semester, $departmentId, $subjectId, $recordsCount) {
+    $sql = "INSERT INTO upload_history (id, exam_type, semester, department_id, subject_id, records_count)
+            VALUES (?, ?, ?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssiiii", $uploadId, $examType, $semester, $departmentId, $subjectId, $recordsCount);
+    $stmt->execute();
+    $stmt->close();
 }

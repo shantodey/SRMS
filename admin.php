@@ -187,8 +187,8 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-brand">
-            <i class="bi bi-mortarboard-fill"></i>
-            <h4>SRMS</h4>
+                <i class="bi bi-mortarboard-fill"></i>
+                <h4>SRMS</h4>
         </div>
 
         <div style="padding: 0 15px 30px;">
@@ -220,6 +220,14 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
             <span><?php echo isAdmin() ? 'Import Results' : 'Add Results'; ?></span>
         </a>
     </li>
+    <?php if (!isAdmin()): ?>
+    <li>
+        <a href="javascript:void(0)" onclick="showSection('manageResults', event)">
+            <i class="bi bi-clipboard-data-fill"></i>
+            <span>Manage Results</span>
+        </a>
+    </li>
+    <?php endif; ?>
     <li>
         <a href="javascript:void(0)" onclick="showSection('manageStudents', event)">
             <i class="bi bi-person-lines-fill"></i>
@@ -510,12 +518,63 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
         <div id="importResults" class="page-section">
             <div class="content-card">
                 <h4><i class="bi bi-file-earmark-bar-graph-fill me-2"></i>Import Results from Excel</h4>
-                <p class="text-muted mb-4">Upload an Excel file with result data. Required columns: index_no, board_roll, subject_code, subject_name, marks_obtained, total_marks</p>
+                <p class="text-muted mb-4">Select exam type, then upload Excel file with student marks</p>
 
-                <div id="resultsUploadZone" class="upload-zone">
+                <!-- Exam Type Selection -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Exam Type <span class="text-danger">*</span></label>
+                        <select id="examTypeSelect" class="form-select" onchange="handleExamTypeChange()" required>
+                            <option value="">Choose Exam Type...</option>
+                            <option value="Final">Final Exam (Semester-wide)</option>
+                            <option value="Midterm">Midterm Exam (Semester-wide)</option>
+                            <option value="ClassTest">Class Test (Subject-specific)</option>
+                            <option value="Assignment">Assignment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4" id="semesterSelectDiv">
+                        <label class="form-label fw-semibold">Semester <span class="text-danger">*</span></label>
+                        <select id="semesterSelect" class="form-select" required>
+                            <option value="">Choose Semester...</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4" id="departmentSelectDiv">
+                        <label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+                        <select id="departmentSelect" class="form-select" onchange="checkIfCanUpload()" required>
+                            <option value="">Choose Department...</option>
+                            <?php foreach ($departments as $dept): ?>
+                                <option value="<?= $dept['id'] ?>"><?= htmlspecialchars($dept['name']) ?> (<?= $dept['code'] ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Test/Assignment Number Field -->
+                <div class="row g-3 mb-4" id="classTestFields" style="display: none;">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" id="testNumberLabel">Test/Assignment Number</label>
+                        <input type="number" id="testNumberInput" class="form-control" placeholder="e.g., 1, 2, 3..." min="1" value="1">
+                        <small class="text-muted">Specify which number (1st, 2nd, 3rd, etc.)</small>
+                    </div>
+                </div>
+
+                <div class="alert alert-info" id="uploadInstruction" style="display: none;">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span id="uploadInstructionText"></span>
+                </div>
+
+                <div id="resultsUploadZone" class="upload-zone" style="opacity: 0.5; pointer-events: none;">
                     <i class="bi bi-cloud-upload"></i>
                     <h5>Drag & Drop Excel File Here</h5>
-                    <p class="text-muted">or click to browse</p>
+                    <p class="text-muted">First select exam type above</p>
                     <button class="btn btn-success mt-3">
                         <i class="bi bi-folder2-open me-2"></i>Choose File
                     </button>
@@ -526,12 +585,99 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
                 </div>
 
                 <div class="mt-4">
-                    <a href="admin/generate_templates.php?type=results" class="btn btn-outline-secondary btn-lg">
+                    <button class="btn btn-outline-secondary btn-lg" onclick="downloadExamTemplate()" disabled id="downloadTemplateBtn">
                         <i class="bi bi-download me-2"></i>Download Template
-                    </a>
+                    </button>
+                    <small class="text-muted ms-2">Select exam details to enable template download</small>
                 </div>
             </div>
         </div>
+
+        <!-- Manage Results Section (Teachers Only) -->
+        <?php if (!isAdmin()): ?>
+        <div id="manageResults" class="page-section">
+            <div class="content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-clipboard-data-fill me-2"></i>Manage Results</h4>
+                    <button id="undoUploadBtn" class="btn btn-warning" style="display: none;">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Undo Last Upload
+                    </button>
+                </div>
+
+                <!-- Filter and Search Section -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Search Student</label>
+                        <input type="text" id="resultsSearch" class="form-control" placeholder="Student name or index no...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Exam Type</label>
+                        <select id="resultsExamTypeFilter" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="Final">Final</option>
+                            <option value="Midterm">Midterm</option>
+                            <option value="ClassTest">Class Test</option>
+                            <option value="Assignment">Assignment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Semester</label>
+                        <select id="resultsSemesterFilter" class="form-select">
+                            <option value="">All Semesters</option>
+                            <?php for ($i = 1; $i <= 8; $i++): ?>
+                                <option value="<?= $i ?>">Semester <?= $i ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Department</label>
+                        <select id="resultsDepartmentFilter" class="form-select">
+                            <option value="">All Departments</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold" style="font-size: 0.85rem; color: #64748b;">Subject</label>
+                        <select id="resultsSubjectFilter" class="form-select">
+                            <option value="">All Subjects</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <table class="table table-hover mb-0" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">S.No</th>
+                                <th>Index No</th>
+                                <th>Student Name</th>
+                                <th>Exam</th>
+                                <th>Subject</th>
+                                <th>Marks</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                                <th>Date</th>
+                                <th style="width: 120px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody" style="--bs-table-bg: #f2eae5;">
+                            <tr>
+                                <td colspan="10" class="text-center" style="padding: 40px;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <div class="mt-2 text-muted">Loading results...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted" id="resultsCount">Loading...</div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Manage Students Section -->
         <div id="manageStudents" class="page-section">
@@ -1063,6 +1209,56 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
         </div>
     </div>
 
+    <!-- Edit Result Modal -->
+    <div class="modal fade" id="editResultModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Result</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editResultForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="editResultId" name="result_id">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Student</label>
+                                <input type="text" class="form-control" id="editResultStudent" readonly style="background: #f8f9fa;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Exam</label>
+                                <input type="text" class="form-control" id="editResultExam" readonly style="background: #f8f9fa;">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="editResultSubject" readonly style="background: #f8f9fa;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Marks Obtained <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editResultMarks" name="marks_obtained" min="0" step="0.01" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Total Marks <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editResultTotalMarks" name="total_marks" min="1" step="0.01" required readonly style="background: #f8f9fa;">
+                                <small class="text-muted">Total marks cannot be changed</small>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> Grade will be automatically recalculated based on the new marks.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Update Result
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Add Teacher Modal -->
     <div class="modal fade" id="addTeacherModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -1115,6 +1311,9 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/admin.js"></script>
+    <?php if (!isAdmin()): ?>
+    <script src="js/manage_results.js"></script>
+    <?php endif; ?>
     <script>
         // Sidebar toggle function
         function toggleSidebar() {
@@ -1182,6 +1381,7 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
                 'dashboard': 'Dashboard',
                 'importStudents': 'Import Students',
                 'importResults': 'Import Results',
+                'manageResults': 'Manage Results',
                 'manageStudents': 'Manage Students',
                 'manageNotices': 'Manage Notices',
                 'manageTeachers': 'Manage Teachers',
@@ -1197,6 +1397,10 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
             // Load data based on section
             if (sectionId === 'manageStudents') {
                 initializeStudentFilters();
+            } else if (sectionId === 'manageResults') {
+                if (typeof initializeResultFilters === 'function') {
+                    initializeResultFilters();
+                }
             } else if (sectionId === 'manageNotices') {
                 loadNotices();
             } else if (sectionId === 'manageTeachers') {
@@ -1219,6 +1423,99 @@ $profile_picture = isset($_SESSION['profile_picture']) ? $_SESSION['profile_pict
                 icon.classList.add('bi-eye-fill');
             }
         }
+
+        // ================================================
+        // EXAM MANAGEMENT FUNCTIONS
+        // ================================================
+
+        function handleExamTypeChange() {
+            const examType = document.getElementById('examTypeSelect').value;
+            const classTestFields = document.getElementById('classTestFields');
+            const uploadZone = document.getElementById('resultsUploadZone');
+            const uploadInstruction = document.getElementById('uploadInstruction');
+            const uploadInstructionText = document.getElementById('uploadInstructionText');
+            const downloadBtn = document.getElementById('downloadTemplateBtn');
+
+            if (!examType) {
+                classTestFields.style.display = 'none';
+                uploadZone.style.opacity = '0.5';
+                uploadZone.style.pointerEvents = 'none';
+                uploadInstruction.style.display = 'none';
+                downloadBtn.disabled = true;
+                return;
+            }
+
+            // Show/hide test number field for ClassTest and Assignment
+            if (examType === 'ClassTest' || examType === 'Assignment') {
+                classTestFields.style.display = 'flex';
+                const label = examType === 'ClassTest' ? 'Class Test Number' : 'Assignment Number';
+                document.getElementById('testNumberLabel').textContent = label;
+            } else {
+                classTestFields.style.display = 'none';
+            }
+
+            // All exam types use the same Excel format
+            uploadInstructionText.textContent = 'Upload Excel with columns: Index No | Board Roll | Subject Code | Subject Name | Marks Obtained | Total Marks';
+
+            uploadInstruction.style.display = 'block';
+
+            // Check if all required fields are filled
+            checkIfCanUpload();
+        }
+
+        function checkIfCanUpload() {
+            const examType = document.getElementById('examTypeSelect').value;
+            const semester = document.getElementById('semesterSelect').value;
+            const department = document.getElementById('departmentSelect').value;
+            const uploadZone = document.getElementById('resultsUploadZone');
+            const downloadBtn = document.getElementById('downloadTemplateBtn');
+
+            let canUpload = examType && semester && department;
+
+            // Subject is no longer required - all info comes from Excel file
+
+            if (canUpload) {
+                uploadZone.style.opacity = '1';
+                uploadZone.style.pointerEvents = 'auto';
+                uploadZone.querySelector('p').textContent = 'or click to browse';
+                downloadBtn.disabled = false;
+            } else {
+                uploadZone.style.opacity = '0.5';
+                uploadZone.style.pointerEvents = 'none';
+                uploadZone.querySelector('p').textContent = 'Complete exam details first';
+                downloadBtn.disabled = true;
+            }
+        }
+
+        // Subject loading removed - subjects now come from Excel file
+        document.addEventListener('DOMContentLoaded', function() {
+            const semesterSelect = document.getElementById('semesterSelect');
+
+            if (semesterSelect) {
+                semesterSelect.addEventListener('change', function() {
+                    checkIfCanUpload();
+                });
+            }
+        });
+
+        function downloadExamTemplate() {
+            const examType = document.getElementById('examTypeSelect').value;
+            const semester = document.getElementById('semesterSelect').value;
+            const department = document.getElementById('departmentSelect').value;
+            const testNumber = document.getElementById('testNumberInput').value;
+
+            if (!examType || !semester || !department) {
+                alert('Please select exam type, semester, and department');
+                return;
+            }
+
+            // Build URL with parameters
+            let url = `admin/generate_exam_template.php?exam_type=${examType}&semester=${semester}&department_id=${department}&test_number=${testNumber}`;
+
+            // Open in new tab to download
+            window.open(url, '_blank');
+        }
+
     </script>
 </body>
 </html>

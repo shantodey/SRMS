@@ -1,6 +1,155 @@
-[14-Oct-2025 16:28:26 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\SRMS\admin\process_excel_upload.php:190
-Stack trace:
-#0 C:\xampp\htdocs\SRMS\admin\process_excel_upload.php(190): mysqli_stmt->bind_param('isisssi', 10, '6th', 1, 'Patia Dio', '1', 'CST-M-1917', '759278', 8)
-#1 C:\xampp\htdocs\SRMS\admin\process_excel_upload.php(101): processStudents(Object(mysqli), Array, Array)
-#2 {main}
-  thrown in C:\xampp\htdocs\SRMS\admin\process_excel_upload.php on line 190
+
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 2: Binding values - examId=10, studentId=18, subjectId=9, marks=28561, total=28, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 2: Database has - exam_id=10, student_id=18, subject_id=9, marks=999.99, total=28.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 3: Binding values - examId=10, studentId=19, subjectId=9, marks=28561, total=25, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 3: Database has - exam_id=10, student_id=19, subject_id=9, marks=999.99, total=25.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 4: Binding values - examId=10, studentId=20, subjectId=9, marks=28561, total=27, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 4: Database has - exam_id=10, student_id=20, subject_id=9, marks=999.99, total=27.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 5: Binding values - examId=10, studentId=21, subjectId=9, marks=28561, total=22, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 5: Database has - exam_id=10, student_id=21, subject_id=9, marks=999.99, total=22.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 6: Binding values - examId=10, studentId=22, subjectId=9, marks=28561, total=29, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 6: Database has - exam_id=10, student_id=22, subject_id=9, marks=999.99, total=29.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 7: Binding values - examId=10, studentId=23, subjectId=9, marks=28561, total=24, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 7: Database has - exam_id=10, student_id=23, subject_id=9, marks=999.99, total=24.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 8: Binding values - examId=10, studentId=24, subjectId=9, marks=28561, total=26, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 8: Database has - exam_id=10, student_id=24, subject_id=9, marks=999.99, total=26.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 9: Binding values - examId=10, studentId=25, subjectId=9, marks=28561, total=23, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 9: Database has - exam_id=10, student_id=25, subject_id=9, marks=999.99, total=23.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 10: Binding values - examId=10, studentId=26, subjectId=9, marks=28561, total=24, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 10: Database has - exam_id=10, student_id=26, subject_id=9, marks=999.99, total=24.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 11: Binding values - examId=10, studentId=27, subjectId=9, marks=28561, total=27, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 11: Database has - exam_id=10, student_id=27, subject_id=9, marks=999.99, total=27.00
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 12: Binding values - examId=10, studentId=28, subjectId=9, marks=28561, total=26, grade=A+, sem=6, uploadId=upload_68fbb02db83662.41645342
+[24-Oct-2025 18:58:21 Europe/Berlin] ROW 12: Database has - exam_id=10, student_id=28, subject_id=9, marks=999.99, total=26.00
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 2 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=28, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=18, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 288
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=28.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 3 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=25, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=19, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 289
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=25.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 4 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=27, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=20, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 290
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=27.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 5 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=22, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=21, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 291
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=22.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 6 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=29, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=22, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 292
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=29.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 7 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=24, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=23, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 293
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=24.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 8 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=26, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=24, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 294
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=26.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 9 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=23, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=25, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 295
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=23.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 10 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=24, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=26, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 296
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=24.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 11 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=27, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=27, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 297
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=27.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:21:15 Europe/Berlin] === ROW 12 ===
+[24-Oct-2025 19:21:15 Europe/Berlin] BEFORE INSERT: marks=28561, total=26, grade=A+
+[24-Oct-2025 19:21:15 Europe/Berlin] IDs: examId=10, studentId=28, subjectId=9, semester=6
+[24-Oct-2025 19:21:15 Europe/Berlin] INSERTED result ID 298
+[24-Oct-2025 19:21:15 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=26.00
+[24-Oct-2025 19:21:15 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 2 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=28, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=18, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 299
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=28.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 3 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=25, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=19, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 300
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=25.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 4 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=27, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=20, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 301
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=27.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 5 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=22, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=21, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 302
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=22.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 6 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=29, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=22, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 303
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=29.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 7 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=24, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=23, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 304
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=24.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 8 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=26, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=24, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 305
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=26.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 9 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=23, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=25, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 306
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=23.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 10 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=24, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=26, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 307
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=24.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 11 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=27, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=27, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 308
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=27.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
+[24-Oct-2025 19:22:48 Europe/Berlin] === ROW 12 ===
+[24-Oct-2025 19:22:48 Europe/Berlin] BEFORE INSERT: marks=28561, total=26, grade=A+
+[24-Oct-2025 19:22:48 Europe/Berlin] IDs: examId=10, studentId=28, subjectId=9, semester=6
+[24-Oct-2025 19:22:48 Europe/Berlin] INSERTED result ID 309
+[24-Oct-2025 19:22:48 Europe/Berlin] DATABASE NOW HAS: marks=999.99, total=26.00
+[24-Oct-2025 19:22:48 Europe/Berlin] !!! MISMATCH DETECTED !!!
